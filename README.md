@@ -76,8 +76,8 @@ factory_ops/
 ### 2. Clone the Repository
 
 ```bash
-git clone https://github.com/<your-username>/zapuza-factory-ops.git
-cd zapuza-factory-ops
+git clone https://github.com/blackcoder234/factory-op-qc-system.git
+cd factory-op-qc-system
 ```
 
 ### 3. Create & Activate Virtual Environment
@@ -131,14 +131,7 @@ Visit the application in your browser:
 
 ---
 
-## 📄 Documentation
-
-Detailed technical specifications, architecture diagrams, interview Q&A defense, and the LaTeX source guide are available in the [`docs/`](docs/) folder.
-
----
-
 ## 👤 Author
 
-- **Name:** Amarnath Bera
-- **Role:** Python Django Developer Intern Candidate
-- **Company:** Zapuza Technologies LLP
+- **Name:** [Amarnath Bera](https://amarnathbera.in)
+- **Contact :** [beraamarnath5@gmail.com](malto:beraamarnath5@gmail.com)
