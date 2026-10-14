@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block title %}{{ checklist.name }} — Tolerance Studio{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <!-- Breadcrumbs & Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-800">
+    <div>
+      <div class="flex items-center gap-2 text-xs text-slate-400 mb-1">
+        <a href="{% url 'inspection:checklist_list' %}" class="hover:text-white transition">Checklist Templates</a>
+        <span>/</span>
+        <span class="text-teal-400 font-mono">{{ checklist.part.part_number }}</span>
+      </div>
+      <h1 class="text-2xl font-extrabold text-white tracking-tight">{{ checklist.name }}</h1>
+      <p class="text-xs text-slate-400 mt-1">
+        Operation: {{ checklist.operation_step }} • Blueprint: {{ checklist.blueprint_reference|default:"Standard Spec" }} (Rev {{ checklist.revision }})
+      </p>
+    </div>
+
+    <!-- Quick action to start inspection session -->
+    <a href="{% url 'inspection:record_list' %}" class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-md shadow-emerald-500/20 transition">
+      + Start Inspection Session With This Checklist
+    </a>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <!-- Checklist Items / Blueprint Tolerances (2 Cols) -->
+    <div class="lg:col-span-2 rounded-2xl bg-slate-900/60 border border-slate-800/80 p-5">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-sm font-bold text-white">Quality Inspection Points & Tolerances ({{ items.count }})</h2>
+        <span class="text-xs text-slate-400 font-mono">BRD Clause 4.2 Blueprint Tolerances</span>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs">
+          <thead class="text-slate-400 border-b border-slate-800 uppercase tracking-wider text-[10px]">
+            <tr>
+              <th class="py-2.5 px-3">#</th>
+              <th class="py-2.5 px-3">Inspection Characteristic</th>
+              <th class="py-2.5 px-3">Nominal & Tol.</th>
+              <th class="py-2.5 px-3">Calculated Limits</th>
+              <th class="py-2.5 px-3 text-right">Instrument</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-800/60 text-slate-300">
+            {% for item in items %}
+            <tr class="hover:bg-slate-800/40 transition">
+              <td class="py-3 px-3 font-mono font-bold text-slate-400">#{{ item.sequence_number }}</td>
+              <td class="py-3 px-3">
+                <div class="font-bold text-white flex items-center gap-1.5">
+                  <span>{{ item.characteristic_name }}</span>
+                  {% if item.is_critical %}
+                    <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30 uppercase">CTQ Critical</span>
+                  {% endif %}
+                </div>
+              </td>
+              <td class="py-3 px-3 font-mono text-slate-200">
+                {{ item.nominal_value }} <span class="text-slate-400 text-[11px]">+{{ item.tolerance_plus }}/-{{ item.tolerance_minus }} {{ item.measurement_unit }}</span>
+              </td>
+              <td class="py-3 px-3 font-mono">
+                <span class="px-2 py-0.5 rounded bg-slate-800 text-teal-400 border border-slate-700/60 text-[11px]">
+                  {{ item.lower_limit }} – {{ item.upper_limit }} {{ item.measurement_unit }}
+                </span>
+              </td>
+              <td class="py-3 px-3 text-right text-slate-400">
+                {{ item.recommended_gauge.serial_number|default:"Standard Instrument" }}
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="5" class="py-6 text-center text-slate-500">No inspection points added to this template yet. Use the form on the right.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Add Characteristic Form (1 Col) -->
+    <div class="rounded-2xl bg-slate-900/60 border border-slate-800/80 p-5 h-fit">
+      <h2 class="text-sm font-bold text-white mb-1">Add Inspection Point</h2>
+      <p class="text-xs text-slate-400 mb-4">Define dimensional tolerance criteria</p>
+
+      <form method="post" class="space-y-3">
+        {% csrf_token %}
+        <div class="grid grid-cols-3 gap-2">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Seq #</label>
+            {{ item_form.sequence_number }}
+          </div>
+          <div class="col-span-2">
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Unit</label>
+            {{ item_form.measurement_unit }}
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Characteristic Name</label>
+          {{ item_form.characteristic_name }}
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Nominal Target Value</label>
+          {{ item_form.nominal_value }}
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Tolerance Plus (+)</label>
+            {{ item_form.tolerance_plus }}
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Tolerance Minus (-)</label>
+            {{ item_form.tolerance_minus }}
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Recommended Gauge</label>
+          {{ item_form.recommended_gauge }}
+        </div>
+
+        <div class="flex items-center gap-2 pt-1">
+          {{ item_form.is_critical }}
+          <label class="text-xs text-rose-300 font-semibold">Critical to Quality (CTQ Point)</label>
+        </div>
+
+        <button type="submit" class="w-full mt-4 py-2 px-4 rounded-lg bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold text-xs shadow-md shadow-teal-500/20 transition">
+          Add Inspection Point
+        </button>
+      </form>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

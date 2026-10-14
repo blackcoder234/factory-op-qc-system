@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block title %}Workstation Lock Board — Calibration & Safety{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <!-- Header Section -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-800">
+    <div>
+      <div class="flex items-center gap-2 mb-1">
+        <span class="text-xs font-bold text-rose-400 font-mono">Module 2</span>
+        <span class="text-xs text-slate-500">/</span>
+        <span class="text-xs text-slate-400">Machine Calibration & Safety Lock</span>
+      </div>
+      <h1 class="text-2xl font-extrabold text-white tracking-tight">Workstation Interlocks & Safety Status</h1>
+      <p class="text-xs text-slate-400 mt-1">BRD Clause 2.1 & 2.2: Mandatory daily verification; locks workstations if PM or calibration is overdue.</p>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="flex items-center gap-2">
+      <a href="{% url 'calibration:maintenance_log' %}" class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-800 transition">
+        <span>PM Logs & History</span>
+      </a>
+      <a href="{% url 'master_setup:machine_list' %}" class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 transition">
+        <span>+ Add Machine</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <div class="p-5 rounded-2xl bg-emerald-950/20 border border-emerald-500/30 flex items-center justify-between">
+      <div>
+        <p class="text-xs font-semibold text-emerald-400 uppercase tracking-wider font-mono">Operational Workstations</p>
+        <p class="text-3xl font-extrabold text-white mt-1">{{ operational_count }}</p>
+        <p class="text-xs text-slate-400 mt-1">Free to accept job orders & PDI checks</p>
+      </div>
+      <div class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      </div>
+    </div>
+
+    <div class="p-5 rounded-2xl bg-rose-950/20 border border-rose-500/30 flex items-center justify-between">
+      <div>
+        <p class="text-xs font-semibold text-rose-400 uppercase tracking-wider font-mono">Locked Workstations</p>
+        <p class="text-3xl font-extrabold text-white mt-1">{{ locked_count }}</p>
+        <p class="text-xs text-slate-400 mt-1">Interlock active — Job assignment disabled</p>
+      </div>
+      <div class="w-12 h-12 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400">
+        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- Workstations Interlock Board Table -->
+  <div class="rounded-2xl bg-slate-900/60 border border-slate-800/80 p-5">
+    <h2 class="text-sm font-bold text-white mb-4">Factory Floor Workstations & Interlock Status</h2>
+
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-xs">
+        <thead class="text-slate-400 border-b border-slate-800 uppercase tracking-wider text-[10px]">
+          <tr>
+            <th class="py-3 px-3">Workstation</th>
+            <th class="py-3 px-3">Department</th>
+            <th class="py-3 px-3">Current Interlock</th>
+            <th class="py-3 px-3">Reason / Details</th>
+            <th class="py-3 px-3">Authorized By</th>
+            <th class="py-3 px-3 text-right">Action</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-800/60 text-slate-300">
+          {% for lock in locks %}
+          <tr class="hover:bg-slate-800/40 transition {% if lock.is_locked %}bg-rose-950/10{% endif %}">
+            <td class="py-3.5 px-3">
+              <div class="font-bold text-white font-mono">{{ lock.machine.machine_code }}</div>
+              <div class="text-[11px] text-slate-400">{{ lock.machine.name }}</div>
+            </td>
+            <td class="py-3.5 px-3 text-slate-400">
+              {{ lock.machine.department.name }}
+            </td>
+            <td class="py-3.5 px-3">
+              {% if lock.is_locked %}
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                  <span class="w-1.5 h-1.5 rounded-full bg-rose-400 animate-ping"></span> LOCKED
+                </span>
+              {% else %}
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> OPERATIONAL
+                </span>
+              {% endif %}
+            </td>
+            <td class="py-3.5 px-3 text-xs max-w-xs">
+              {% if lock.is_locked %}
+                <span class="font-semibold text-rose-300">{{ lock.get_reason_code_display }}</span>
+                <p class="text-[11px] text-slate-400 line-clamp-2 mt-0.5">{{ lock.reason_details }}</p>
+              {% else %}
+                <span class="text-slate-400 text-xs">All daily PM and calibration checks certified.</span>
+              {% endif %}
+            </td>
+            <td class="py-3.5 px-3 font-mono text-slate-400 text-[11px]">
+              {% if lock.is_locked %}
+                {{ lock.locked_by|default:"System" }}
+                <div class="text-slate-400">{{ lock.locked_at|date:"M d, H:i" }}</div>
+              {% else %}
+                Verified
+              {% endif %}
+            </td>
+            <td class="py-3.5 px-3 text-right">
+              <a href="{% url 'calibration:toggle_lock' machine_id=lock.machine.id %}" 
+                 class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition {% if lock.is_locked %}bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-sm shadow-emerald-500/20{% else %}bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30{% endif %}">
+                {% if lock.is_locked %}
+                  <span>Release Lock</span>
+                {% else %}
+                  <span>Lock Machine</span>
+                {% endif %}
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

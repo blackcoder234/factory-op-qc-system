@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Workstation Interlock — {{ machine.machine_code }}{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto space-y-6">
+
+  <!-- Breadcrumb -->
+  <div class="flex items-center gap-2 text-xs text-slate-400">
+    <a href="{% url 'calibration:machine_lock_list' %}" class="hover:text-white transition">Workstation Lock Board</a>
+    <span>/</span>
+    <span class="text-rose-400 font-mono">{{ machine.machine_code }}</span>
+  </div>
+
+  <!-- Main Card -->
+  <div class="rounded-2xl bg-slate-900/60 border border-slate-800/80 p-6 backdrop-blur-sm">
+    <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+      <div>
+        <h1 class="text-xl font-extrabold text-white">Workstation Interlock Authorization</h1>
+        <p class="text-xs text-slate-400 mt-1">{{ machine.name }} ({{ machine.department.name }})</p>
+      </div>
+
+      {% if lock_obj.is_locked %}
+        <span class="px-3 py-1 rounded-full text-xs font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">
+          CURRENTLY LOCKED
+        </span>
+      {% else %}
+        <span class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+          OPERATIONAL
+        </span>
+      {% endif %}
+    </div>
+
+    <!-- Active Lock Details if already locked -->
+    {% if lock_obj.is_locked %}
+    <div class="my-4 p-4 rounded-xl bg-rose-950/30 border border-rose-500/30 text-xs space-y-1">
+      <div class="font-bold text-rose-300">Lock Reason: {{ lock_obj.get_reason_code_display }}</div>
+      <p class="text-rose-200/90">{{ lock_obj.reason_details }}</p>
+      <p class="text-slate-400 font-mono pt-1">Locked by: {{ lock_obj.locked_by }} at {{ lock_obj.locked_at|date:"M d, Y H:i" }}</p>
+    </div>
+    {% endif %}
+
+    <!-- Action Form -->
+    <form method="post" class="space-y-4 mt-6">
+      {% csrf_token %}
+
+      {% if not lock_obj.is_locked %}
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Reason for Lock</label>
+          {{ form.reason_code }}
+        </div>
+      {% endif %}
+
+      <div>
+        <label class="block text-xs font-semibold text-slate-300 mb-1">
+          {% if lock_obj.is_locked %}Supervisor Clearance Notes / Justification{% else %}Detailed Findings / Problem Description{% endif %}
+        </label>
+        {{ form.reason_details }}
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold text-slate-300 mb-1">Authorizing Supervisor Name</label>
+        {{ form.supervisor_name }}
+      </div>
+
+      <div class="flex items-center gap-3 pt-4 border-t border-slate-800">
+        <a href="{% url 'calibration:machine_lock_list' %}" class="py-2.5 px-4 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition">
+          Cancel
+        </a>
+        <button type="submit" class="flex-1 py-2.5 px-4 rounded-lg font-bold text-xs shadow-md transition {% if lock_obj.is_locked %}bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-emerald-500/20{% else %}bg-rose-500 hover:bg-rose-600 text-white shadow-rose-500/20{% endif %}">
+          {% if lock_obj.is_locked %}
+            Authorize Release & Unlock Workstation
+          {% else %}
+            Enforce Lock & Disable Job Selection
+          {% endif %}
+        </button>
+      </div>
+    </form>
+  </div>
+
+</div>
+{% endblock %}

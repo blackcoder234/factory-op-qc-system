@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block title %}Inspection Gauges & Calibration — Master Setup{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <!-- Header with Sub-navigation tabs -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-800">
+    <div>
+      <div class="flex items-center gap-2 mb-1">
+        <span class="text-xs font-bold text-emerald-400 font-mono">Module 1</span>
+        <span class="text-xs text-slate-500">/</span>
+        <span class="text-xs text-slate-400">Master Plant Infrastructure</span>
+      </div>
+      <h1 class="text-2xl font-extrabold text-white tracking-tight">Inspection Gauges & Calibration Registry</h1>
+    </div>
+
+    <!-- Master Setup Tabs -->
+    <div class="flex items-center gap-1.5 p-1 bg-slate-900 border border-slate-800 rounded-xl text-xs font-semibold">
+      <a href="{% url 'master_setup:department_list' %}" class="px-3 py-1.5 rounded-lg text-slate-400 hover:text-white transition">Departments</a>
+      <a href="{% url 'master_setup:machine_list' %}" class="px-3 py-1.5 rounded-lg text-slate-400 hover:text-white transition">Machines</a>
+      <a href="{% url 'master_setup:part_list' %}" class="px-3 py-1.5 rounded-lg text-slate-400 hover:text-white transition">Parts</a>
+      <a href="{% url 'master_setup:gauge_list' %}" class="px-3 py-1.5 rounded-lg bg-emerald-500 text-slate-950 shadow-sm">Gauges</a>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <!-- Gauges Table (2 Cols) -->
+    <div class="lg:col-span-2 rounded-2xl bg-slate-900/60 border border-slate-800/80 p-5">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-sm font-bold text-white">Precision Measuring Instruments ({{ gauges.count }})</h2>
+        <span class="text-xs text-slate-400">BRD Clause 2.3 Calibration Enforcement</span>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs">
+          <thead class="text-slate-400 border-b border-slate-800 uppercase tracking-wider text-[10px]">
+            <tr>
+              <th class="py-2.5 px-3">Serial #</th>
+              <th class="py-2.5 px-3">Gauge Description</th>
+              <th class="py-2.5 px-3">Range & Res.</th>
+              <th class="py-2.5 px-3">Calibration Due</th>
+              <th class="py-2.5 px-3 text-right">Status</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-800/60 text-slate-300">
+            {% for g in gauges %}
+            <tr class="hover:bg-slate-800/40 transition">
+              <td class="py-3 px-3 font-mono font-bold text-white">{{ g.serial_number }}</td>
+              <td class="py-3 px-3">
+                <div class="font-semibold text-slate-200">{{ g.name }}</div>
+                <div class="text-[11px] text-slate-400">{{ g.get_gauge_type_display }} • {{ g.location|default:"Tool Crib" }}</div>
+              </td>
+              <td class="py-3 px-3 font-mono text-slate-300">
+                {{ g.range_min }}–{{ g.range_max }} mm
+                <div class="text-[11px] text-slate-500">Res: {{ g.resolution }} mm</div>
+              </td>
+              <td class="py-3 px-3 font-mono">
+                {% if g.calibration_due_date %}
+                  {{ g.calibration_due_date|date:"d M Y" }}
+                {% else %}
+                  <span class="text-slate-500">Not set</span>
+                {% endif %}
+              </td>
+              <td class="py-3 px-3 text-right">
+                {% if g.is_calibration_expired %}
+                  <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                    <span class="w-1.5 h-1.5 rounded-full bg-rose-400 animate-ping"></span> OVERDUE
+                  </span>
+                {% else %}
+                  <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> CERTIFIED
+                  </span>
+                {% endif %}
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="5" class="py-6 text-center text-slate-500">No measuring instruments registered yet.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Quick Add Gauge Form (1 Col) -->
+    <div class="rounded-2xl bg-slate-900/60 border border-slate-800/80 p-5 h-fit">
+      <h2 class="text-sm font-bold text-white mb-1">Register Instrument</h2>
+      <p class="text-xs text-slate-400 mb-4">Add precision caliper, micrometer or gauge</p>
+
+      <form method="post" class="space-y-3">
+        {% csrf_token %}
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Serial Number</label>
+          {{ form.serial_number }}
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Tool Description</label>
+          {{ form.name }}
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Instrument Type</label>
+          {{ form.gauge_type }}
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Min (mm)</label>
+            {{ form.range_min }}
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Max (mm)</label>
+            {{ form.range_max }}
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Resolution (mm)</label>
+            {{ form.resolution }}
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Crib Location</label>
+            {{ form.location }}
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Last Cal Date</label>
+            {{ form.last_calibration_date }}
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Cal Due Date</label>
+            {{ form.calibration_due_date }}
+          </div>
+        </div>
+        <div class="flex items-center gap-2 pt-1">
+          {{ form.is_active }}
+          <label class="text-xs text-slate-300">Tool Active in Crib</label>
+        </div>
+
+        <button type="submit" class="w-full mt-4 py-2 px-4 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs shadow-md shadow-emerald-500/20 transition">
+          Register Gauge
+        </button>
+      </form>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

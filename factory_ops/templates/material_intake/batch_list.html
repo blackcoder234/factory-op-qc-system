@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block title %}Raw Material Intake & MTC — Quality Logistics{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-800">
+    <div>
+      <div class="flex items-center gap-2 mb-1">
+        <span class="text-xs font-bold text-blue-400 font-mono">Module 3</span>
+        <span class="text-xs text-slate-500">/</span>
+        <span class="text-xs text-slate-400">Raw Material Intake & MTC</span>
+      </div>
+      <h1 class="text-2xl font-extrabold text-white tracking-tight">Receiving Dock & MTC Verification</h1>
+      <p class="text-xs text-slate-400 mt-1">BRD Clause 3.1 & 3.2: Log Heat Numbers, verify Mill Test Certificate chemistry, and issue SNCR quarantine.</p>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="flex items-center gap-2">
+      <span class="px-2.5 py-1 rounded-lg bg-blue-500/10 text-blue-400 border border-blue-500/20 text-xs font-semibold">
+        {{ pending_count }} Pending
+      </span>
+      <span class="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-semibold">
+        {{ accepted_count }} Accepted
+      </span>
+      <span class="px-2.5 py-1 rounded-lg bg-rose-500/10 text-rose-400 border border-rose-500/20 text-xs font-semibold">
+        {{ rejected_count }} Rejected / SNCR
+      </span>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <!-- Batch List Table (2 Cols) -->
+    <div class="lg:col-span-2 rounded-2xl bg-slate-900/60 border border-slate-800/80 p-5">
+      <h2 class="text-sm font-bold text-white mb-4">Received Material Batches ({{ batches.count }})</h2>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs">
+          <thead class="text-slate-400 border-b border-slate-800 uppercase tracking-wider text-[10px]">
+            <tr>
+              <th class="py-2.5 px-3">Heat / PO #</th>
+              <th class="py-2.5 px-3">Supplier & Grade</th>
+              <th class="py-2.5 px-3">Lot Size</th>
+              <th class="py-2.5 px-3">Date Received</th>
+              <th class="py-2.5 px-3">Status</th>
+              <th class="py-2.5 px-3 text-right">Verification</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-800/60 text-slate-300">
+            {% for b in batches %}
+            <tr class="hover:bg-slate-800/40 transition">
+              <td class="py-3 px-3">
+                <div class="font-mono font-bold text-white">{{ b.heat_number }}</div>
+                <div class="text-[11px] text-slate-400 font-mono">{{ b.purchase_order_number }}</div>
+              </td>
+              <td class="py-3 px-3">
+                <div class="font-semibold text-slate-200">{{ b.supplier_name }}</div>
+                <div class="text-[11px] text-slate-400 font-mono">{{ b.material_grade }}</div>
+              </td>
+              <td class="py-3 px-3 font-mono text-slate-300">
+                {{ b.lot_size }} {{ b.unit_of_measure }}
+              </td>
+              <td class="py-3 px-3 font-mono text-slate-400">
+                {{ b.received_date|date:"d M Y" }}
+              </td>
+              <td class="py-3 px-3">
+                {% if b.status == 'ACCEPTED' %}
+                  <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    ACCEPTED
+                  </span>
+                {% elif b.status == 'REJECTED' %}
+                  <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                    REJECTED
+                  </span>
+                {% elif b.status == 'QUARANTINED' %}
+                  <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                    QUARANTINE
+                  </span>
+                {% else %}
+                  <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                    PENDING MTC
+                  </span>
+                {% endif %}
+              </td>
+              <td class="py-3 px-3 text-right">
+                <a href="{% url 'material_intake:batch_detail' batch_id=b.id %}" class="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-blue-400 border border-slate-700/60 transition font-medium">
+                  Verify MTC →
+                </a>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="6" class="py-6 text-center text-slate-500">No material batches logged yet.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Quick Dock Receiving Form (1 Col) -->
+    <div class="rounded-2xl bg-slate-900/60 border border-slate-800/80 p-5 h-fit">
+      <h2 class="text-sm font-bold text-white mb-1">Dock Receiving Form</h2>
+      <p class="text-xs text-slate-400 mb-4">Log incoming steel lot & upload MTC</p>
+
+      <form method="post" enctype="multipart/form-data" class="space-y-3">
+        {% csrf_token %}
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Heat Number (Melt #)</label>
+          {{ form.heat_number }}
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Purchase Order #</label>
+          {{ form.purchase_order_number }}
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Supplier / Foundry</label>
+          {{ form.supplier_name }}
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Associated Part</label>
+          {{ form.part }}
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Material Grade</label>
+            {{ form.material_grade }}
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Lot Size</label>
+            {{ form.lot_size }}
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Units</label>
+            {{ form.unit_of_measure }}
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Date Received</label>
+            {{ form.received_date }}
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Dock Inspector</label>
+          {{ form.dock_inspector }}
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Upload MTC Document (PDF)</label>
+          {{ form.mtc_document }}
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Visual Notes</label>
+          {{ form.notes }}
+        </div>
+
+        <button type="submit" class="w-full mt-4 py-2 px-4 rounded-lg bg-blue-500 hover:bg-blue-400 text-slate-950 font-bold text-xs shadow-md shadow-blue-500/20 transition">
+          Log Intake Batch
+        </button>
+      </form>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

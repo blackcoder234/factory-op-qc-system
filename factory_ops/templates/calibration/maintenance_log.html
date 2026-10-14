@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}Preventive Maintenance & Setup Verification — Calibration{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-800">
+    <div>
+      <div class="flex items-center gap-2 mb-1">
+        <span class="text-xs font-bold text-rose-400 font-mono">Module 2</span>
+        <span class="text-xs text-slate-500">/</span>
+        <span class="text-xs text-slate-400">Maintenance & Tool Calibration</span>
+      </div>
+      <h1 class="text-2xl font-extrabold text-white tracking-tight">Preventive Maintenance (PM) & Setup Logs</h1>
+    </div>
+
+    <a href="{% url 'calibration:machine_lock_list' %}" class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-800 transition">
+      <span>← Back to Workstation Lock Board</span>
+    </a>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <!-- PM Log History Table (2 Cols) -->
+    <div class="lg:col-span-2 rounded-2xl bg-slate-900/60 border border-slate-800/80 p-5">
+      <h2 class="text-sm font-bold text-white mb-4">Historical Verification Logs ({{ records.count }})</h2>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs">
+          <thead class="text-slate-400 border-b border-slate-800 uppercase tracking-wider text-[10px]">
+            <tr>
+              <th class="py-2.5 px-3">Workstation</th>
+              <th class="py-2.5 px-3">Type & Technician</th>
+              <th class="py-2.5 px-3">Date Performed</th>
+              <th class="py-2.5 px-3">Next Due</th>
+              <th class="py-2.5 px-3 text-right">Verification</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-800/60 text-slate-300">
+            {% for r in records %}
+            <tr class="hover:bg-slate-800/40 transition">
+              <td class="py-3 px-3 font-mono font-bold text-white">
+                {{ r.machine.machine_code }}
+                <div class="text-[11px] font-normal text-slate-400">{{ r.machine.name }}</div>
+              </td>
+              <td class="py-3 px-3">
+                <div class="font-semibold text-slate-200">{{ r.get_maintenance_type_display }}</div>
+                <div class="text-[11px] text-slate-400">By: {{ r.performed_by }}</div>
+              </td>
+              <td class="py-3 px-3 font-mono text-slate-300">{{ r.performed_date|date:"d M Y" }}</td>
+              <td class="py-3 px-3 font-mono">
+                {{ r.next_due_date|date:"d M Y" }}
+                {% if r.is_overdue %}
+                  <span class="text-[10px] text-rose-400 block font-bold">OVERDUE</span>
+                {% endif %}
+              </td>
+              <td class="py-3 px-3 text-right">
+                {% if r.status == 'PASS' %}
+                  <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    PASS
+                  </span>
+                {% else %}
+                  <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                    FAIL
+                  </span>
+                {% endif %}
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="5" class="py-6 text-center text-slate-500">No maintenance records logged yet.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Quick Log PM Form (1 Col) -->
+    <div class="rounded-2xl bg-slate-900/60 border border-slate-800/80 p-5 h-fit">
+      <h2 class="text-sm font-bold text-white mb-1">Log Maintenance Check</h2>
+      <p class="text-xs text-slate-400 mb-4">Record daily setup or PM verification</p>
+
+      <form method="post" class="space-y-3">
+        {% csrf_token %}
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Machine</label>
+          {{ form.machine }}
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Maintenance Type</label>
+          {{ form.maintenance_type }}
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Performed By</label>
+          {{ form.performed_by }}
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Date Performed</label>
+            {{ form.performed_date }}
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Next Due Date</label>
+            {{ form.next_due_date }}
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Result Status</label>
+          {{ form.status }}
+          <p class="text-[11px] text-slate-400 mt-1">Note: Selecting FAIL automatically activates Workstation Lock!</p>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Checklist Observations</label>
+          {{ form.checklist_notes }}
+        </div>
+
+        <button type="submit" class="w-full mt-4 py-2 px-4 rounded-lg bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs shadow-md shadow-rose-500/20 transition">
+          Record Maintenance
+        </button>
+      </form>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

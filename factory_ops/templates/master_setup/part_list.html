@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}Manufactured Parts & Components — Master Setup{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <!-- Header with Sub-navigation tabs -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-800">
+    <div>
+      <div class="flex items-center gap-2 mb-1">
+        <span class="text-xs font-bold text-emerald-400 font-mono">Module 1</span>
+        <span class="text-xs text-slate-500">/</span>
+        <span class="text-xs text-slate-400">Master Plant Infrastructure</span>
+      </div>
+      <h1 class="text-2xl font-extrabold text-white tracking-tight">Manufactured Components & Part Registry</h1>
+    </div>
+
+    <!-- Master Setup Tabs -->
+    <div class="flex items-center gap-1.5 p-1 bg-slate-900 border border-slate-800 rounded-xl text-xs font-semibold">
+      <a href="{% url 'master_setup:department_list' %}" class="px-3 py-1.5 rounded-lg text-slate-400 hover:text-white transition">Departments</a>
+      <a href="{% url 'master_setup:machine_list' %}" class="px-3 py-1.5 rounded-lg text-slate-400 hover:text-white transition">Machines</a>
+      <a href="{% url 'master_setup:part_list' %}" class="px-3 py-1.5 rounded-lg bg-emerald-500 text-slate-950 shadow-sm">Parts</a>
+      <a href="{% url 'master_setup:gauge_list' %}" class="px-3 py-1.5 rounded-lg text-slate-400 hover:text-white transition">Gauges</a>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <!-- Parts Table (2 Cols) -->
+    <div class="lg:col-span-2 rounded-2xl bg-slate-900/60 border border-slate-800/80 p-5">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-sm font-bold text-white">Registered Components ({{ parts.count }})</h2>
+        <a href="{% url 'inspection:checklist_list' %}" class="text-xs font-semibold text-teal-400 hover:text-teal-300">
+          Inspection Checklists →
+        </a>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs">
+          <thead class="text-slate-400 border-b border-slate-800 uppercase tracking-wider text-[10px]">
+            <tr>
+              <th class="py-2.5 px-3">Part Number</th>
+              <th class="py-2.5 px-3">Component Name</th>
+              <th class="py-2.5 px-3">Material Spec</th>
+              <th class="py-2.5 px-3">Blueprint / Rev</th>
+              <th class="py-2.5 px-3 text-right">Checklists</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-800/60 text-slate-300">
+            {% for p in parts %}
+            <tr class="hover:bg-slate-800/40 transition">
+              <td class="py-3 px-3 font-mono font-bold text-white">{{ p.part_number }}</td>
+              <td class="py-3 px-3 font-semibold text-slate-200">{{ p.name }}</td>
+              <td class="py-3 px-3 text-slate-400 font-mono">{{ p.material_spec|default:"N/A" }}</td>
+              <td class="py-3 px-3">
+                <span class="px-1.5 py-0.5 rounded text-[10px] font-bold font-mono bg-slate-800 text-slate-300 border border-slate-700">
+                  Rev {{ p.revision }}
+                </span>
+                <span class="text-slate-400 text-[11px] ml-1">{{ p.drawing_number }}</span>
+              </td>
+              <td class="py-3 px-3 text-right">
+                <a href="{% url 'inspection:checklist_list' %}" class="px-2 py-1 rounded text-[11px] font-medium bg-slate-800 hover:bg-slate-700 text-teal-400 border border-slate-700/60 transition">
+                  View PDI
+                </a>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="5" class="py-6 text-center text-slate-500">No manufactured parts registered yet.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Quick Add Part Form (1 Col) -->
+    <div class="rounded-2xl bg-slate-900/60 border border-slate-800/80 p-5 h-fit">
+      <h2 class="text-sm font-bold text-white mb-1">Add Part Component</h2>
+      <p class="text-xs text-slate-400 mb-4">Register new manufactured part number</p>
+
+      <form method="post" class="space-y-3">
+        {% csrf_token %}
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Part Number</label>
+          {{ form.part_number }}
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Part Name</label>
+          {{ form.name }}
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Material Specification</label>
+          {{ form.material_spec }}
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Drawing No.</label>
+            {{ form.drawing_number }}
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Revision</label>
+            {{ form.revision }}
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Description</label>
+          {{ form.description }}
+        </div>
+        <div class="flex items-center gap-2 pt-1">
+          {{ form.is_active }}
+          <label class="text-xs text-slate-300">Active Part</label>
+        </div>
+
+        <button type="submit" class="w-full mt-4 py-2 px-4 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs shadow-md shadow-emerald-500/20 transition">
+          Register Part
+        </button>
+      </form>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

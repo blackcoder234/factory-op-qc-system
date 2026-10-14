@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block title %}Machine Tools & Workstations — Master Setup{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <!-- Header with Sub-navigation tabs -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-800">
+    <div>
+      <div class="flex items-center gap-2 mb-1">
+        <span class="text-xs font-bold text-emerald-400 font-mono">Module 1</span>
+        <span class="text-xs text-slate-500">/</span>
+        <span class="text-xs text-slate-400">Master Plant Infrastructure</span>
+      </div>
+      <h1 class="text-2xl font-extrabold text-white tracking-tight">Machine Tools & CNC Workstations</h1>
+    </div>
+
+    <!-- Master Setup Tabs -->
+    <div class="flex items-center gap-1.5 p-1 bg-slate-900 border border-slate-800 rounded-xl text-xs font-semibold">
+      <a href="{% url 'master_setup:department_list' %}" class="px-3 py-1.5 rounded-lg text-slate-400 hover:text-white transition">Departments</a>
+      <a href="{% url 'master_setup:machine_list' %}" class="px-3 py-1.5 rounded-lg bg-emerald-500 text-slate-950 shadow-sm">Machines</a>
+      <a href="{% url 'master_setup:part_list' %}" class="px-3 py-1.5 rounded-lg text-slate-400 hover:text-white transition">Parts</a>
+      <a href="{% url 'master_setup:gauge_list' %}" class="px-3 py-1.5 rounded-lg text-slate-400 hover:text-white transition">Gauges</a>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <!-- Machines Table (2 Cols) -->
+    <div class="lg:col-span-2 rounded-2xl bg-slate-900/60 border border-slate-800/80 p-5">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-sm font-bold text-white">Workstation Register ({{ machines.count }})</h2>
+        <a href="{% url 'calibration:machine_lock_list' %}" class="text-xs font-semibold text-rose-400 hover:text-rose-300">
+          View Workstation Locks →
+        </a>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs">
+          <thead class="text-slate-400 border-b border-slate-800 uppercase tracking-wider text-[10px]">
+            <tr>
+              <th class="py-2.5 px-3">Machine Code</th>
+              <th class="py-2.5 px-3">Name / Type</th>
+              <th class="py-2.5 px-3">Department</th>
+              <th class="py-2.5 px-3">Lock Status</th>
+              <th class="py-2.5 px-3 text-right">Interlock</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-800/60 text-slate-300">
+            {% for m in machines %}
+            <tr class="hover:bg-slate-800/40 transition">
+              <td class="py-3 px-3 font-mono font-bold text-white">{{ m.machine_code }}</td>
+              <td class="py-3 px-3">
+                <div class="font-semibold text-slate-200">{{ m.name }}</div>
+                <div class="text-[11px] text-slate-400">{{ m.machine_type|default:"Standard CNC" }}</div>
+              </td>
+              <td class="py-3 px-3 text-slate-400">{{ m.department.name }}</td>
+              <td class="py-3 px-3">
+                {% if m.is_locked %}
+                  <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                    <span class="w-1.5 h-1.5 rounded-full bg-rose-400 animate-ping"></span> LOCKED
+                  </span>
+                {% else %}
+                  <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> OPERATIONAL
+                  </span>
+                {% endif %}
+              </td>
+              <td class="py-3 px-3 text-right">
+                <a href="{% url 'calibration:toggle_lock' machine_id=m.id %}" class="px-2 py-1 rounded text-[11px] font-medium bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700/60 transition">
+                  Manage Lock
+                </a>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="5" class="py-6 text-center text-slate-500">No machine tools registered yet.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Quick Add Machine Form (1 Col) -->
+    <div class="rounded-2xl bg-slate-900/60 border border-slate-800/80 p-5 h-fit">
+      <h2 class="text-sm font-bold text-white mb-1">Add Workstation</h2>
+      <p class="text-xs text-slate-400 mb-4">Register new CNC or manual equipment</p>
+
+      <form method="post" class="space-y-3">
+        {% csrf_token %}
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Department</label>
+          {{ form.department }}
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Machine Code</label>
+          {{ form.machine_code }}
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Machine Name</label>
+          {{ form.name }}
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Equipment Type</label>
+          {{ form.machine_type }}
+        </div>
+        <div class="flex items-center gap-2 pt-1">
+          {{ form.is_active }}
+          <label class="text-xs text-slate-300">Active Machine</label>
+        </div>
+
+        <button type="submit" class="w-full mt-4 py-2 px-4 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs shadow-md shadow-emerald-500/20 transition">
+          Register Machine
+        </button>
+      </form>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,342 @@
+{% extends "base.html" %}
+
+{% block title %}Plant Overview & QC Dashboard — FactoryOps QC{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+
+  <!-- Header Section -->
+  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-6 border-b border-slate-800">
+    <div>
+      <div class="flex items-center gap-2 mb-1">
+        <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Shopfloor Operations Hub</span>
+        <span class="text-xs text-slate-400 font-mono">BRD Compliance: Modules 1–4 Active</span>
+      </div>
+      <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">Plant Overview & Quality Control Dashboard</h1>
+      <p class="text-xs sm:text-sm text-slate-400 mt-1">Real-time telemetry, machine interlocks, MTC receiving analytics, and pre-dispatch inspection records.</p>
+    </div>
+
+    <!-- Quick Action Navigation -->
+    <div class="flex items-center gap-2">
+      <a href="{% url 'master_setup:department_list' %}" class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-800 transition">
+        <span>Master Setup</span>
+      </a>
+      <a href="{% url 'calibration:machine_lock_list' %}" class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 transition">
+        <span class="w-2 h-2 rounded-full bg-rose-400"></span>
+        <span>Machine Lock ({{ locked_count }})</span>
+      </a>
+      <a href="{% url 'inspection:record_list' %}" class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-md shadow-emerald-500/20 transition">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+        </svg>
+        <span>New Inspection</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- KPI Top Stat Cards -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    
+    <!-- Stat 1: Machines & Lock Status -->
+    <div class="p-5 rounded-2xl bg-slate-900/60 border border-slate-800/80 backdrop-blur-sm relative overflow-hidden">
+      <div class="flex items-center justify-between text-slate-400 text-xs font-medium mb-3">
+        <span>Workstations & PM</span>
+        <span class="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-slate-300">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+          </svg>
+        </span>
+      </div>
+      <div class="flex items-baseline gap-2">
+        <span class="text-3xl font-extrabold text-white tracking-tight">{{ total_machines }}</span>
+        <span class="text-xs text-slate-400">Total Workstations</span>
+      </div>
+      <div class="mt-3 flex items-center gap-3 text-xs">
+        <span class="inline-flex items-center gap-1.5 text-emerald-400 font-medium">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> {{ operational_count }} Active
+        </span>
+        {% if locked_count > 0 %}
+          <span class="inline-flex items-center gap-1.5 text-rose-400 font-medium bg-rose-500/10 px-2 py-0.5 rounded-md border border-rose-500/20">
+            <span class="w-1.5 h-1.5 rounded-full bg-rose-400 animate-ping"></span> {{ locked_count }} Locked
+          </span>
+        {% else %}
+          <span class="text-slate-400">0 Overdue Locks</span>
+        {% endif %}
+      </div>
+      <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-emerald-500/5 rounded-full blur-xl pointer-events-none"></div>
+    </div>
+
+    <!-- Stat 2: Precision Gauges & Calibration -->
+    <div class="p-5 rounded-2xl bg-slate-900/60 border border-slate-800/80 backdrop-blur-sm relative overflow-hidden">
+      <div class="flex items-center justify-between text-slate-400 text-xs font-medium mb-3">
+        <span>Inspection Gauges</span>
+        <span class="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-slate-300">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+          </svg>
+        </span>
+      </div>
+      <div class="flex items-baseline gap-2">
+        <span class="text-3xl font-extrabold text-white tracking-tight">{{ total_gauges }}</span>
+        <span class="text-xs text-slate-400">Calibrated Tools</span>
+      </div>
+      <div class="mt-3 flex items-center gap-2 text-xs">
+        {% if overdue_gauges|length > 0 %}
+          <span class="inline-flex items-center gap-1 text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/20 font-medium">
+            ⚠ {{ overdue_gauges|length }} Calibration Overdue
+          </span>
+        {% else %}
+          <span class="text-emerald-400 font-medium">✓ All Gauges In Calibration</span>
+        {% endif %}
+      </div>
+      <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-amber-500/5 rounded-full blur-xl pointer-events-none"></div>
+    </div>
+
+    <!-- Stat 3: Raw Material Batches & MTC -->
+    <div class="p-5 rounded-2xl bg-slate-900/60 border border-slate-800/80 backdrop-blur-sm relative overflow-hidden">
+      <div class="flex items-center justify-between text-slate-400 text-xs font-medium mb-3">
+        <span>Material Batches (MTC)</span>
+        <span class="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-slate-300">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+          </svg>
+        </span>
+      </div>
+      <div class="flex items-baseline gap-2">
+        <span class="text-3xl font-extrabold text-white tracking-tight">{{ total_batches }}</span>
+        <span class="text-xs text-slate-400">Heat Numbers Logged</span>
+      </div>
+      <div class="mt-3 flex items-center gap-3 text-xs font-medium">
+        <span class="text-emerald-400">{{ accepted_batches }} Accepted</span>
+        <span class="text-rose-400">{{ rejected_batches }} Rejected</span>
+        {% if active_sncrs > 0 %}
+          <span class="text-rose-300 bg-rose-500/10 px-1.5 py-0.5 rounded border border-rose-500/20">{{ active_sncrs }} SNCR</span>
+        {% endif %}
+      </div>
+      <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-blue-500/5 rounded-full blur-xl pointer-events-none"></div>
+    </div>
+
+    <!-- Stat 4: PDI Inspection Pass Rate -->
+    <div class="p-5 rounded-2xl bg-slate-900/60 border border-slate-800/80 backdrop-blur-sm relative overflow-hidden">
+      <div class="flex items-center justify-between text-slate-400 text-xs font-medium mb-3">
+        <span>Inspection Quality Yield</span>
+        <span class="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-slate-300">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+          </svg>
+        </span>
+      </div>
+      <div class="flex items-baseline gap-2">
+        <span class="text-3xl font-extrabold text-white tracking-tight">{{ pass_rate }}%</span>
+        <span class="text-xs text-slate-400">PDI Pass Rate</span>
+      </div>
+      <div class="mt-3 flex items-center gap-3 text-xs font-medium">
+        <span class="text-emerald-400">{{ passed_inspections }} Passed</span>
+        <span class="text-rose-400">{{ failed_inspections }} Failed</span>
+        <span class="text-slate-400">Total: {{ total_inspections }}</span>
+      </div>
+      <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-teal-500/5 rounded-full blur-xl pointer-events-none"></div>
+    </div>
+
+  </div>
+
+  <!-- Operational Interlocks & Critical Alerts -->
+  {% if locked_machines or overdue_gauges %}
+  <div class="rounded-2xl border border-rose-500/30 bg-rose-950/20 p-5 backdrop-blur-sm">
+    <div class="flex items-center gap-2 mb-4">
+      <div class="w-3 h-3 rounded-full bg-rose-500 animate-ping"></div>
+      <h2 class="text-base font-bold text-rose-300">Active Shopfloor Quality Alerts & Interlocks</h2>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <!-- Locked Machines Feed -->
+      {% for lock in locked_machines %}
+      <div class="p-3.5 rounded-xl bg-slate-950/70 border border-rose-500/20 flex items-start justify-between gap-3">
+        <div class="space-y-1">
+          <div class="flex items-center gap-2">
+            <span class="px-2 py-0.5 text-[10px] font-bold rounded bg-rose-500/20 text-rose-300 border border-rose-500/30">MACHINE LOCKED</span>
+            <span class="text-xs font-bold text-white">{{ lock.machine.machine_code }}</span>
+            <span class="text-xs text-slate-400">({{ lock.machine.name }})</span>
+          </div>
+          <p class="text-xs text-rose-200/90">{{ lock.reason_details|default:lock.get_reason_code_display }}</p>
+          <p class="text-[11px] text-slate-500 font-mono">Locked by: {{ lock.locked_by }} • {{ lock.locked_at|date:"M d, H:i" }}</p>
+        </div>
+        <a href="{% url 'calibration:toggle_lock' machine_id=lock.machine.id %}" class="px-2.5 py-1 text-xs font-semibold rounded bg-rose-500 hover:bg-rose-600 text-white transition flex-shrink-0">
+          Manage Lock
+        </a>
+      </div>
+      {% endfor %}
+
+      <!-- Overdue Gauges Feed -->
+      {% for gauge in overdue_gauges %}
+      <div class="p-3.5 rounded-xl bg-slate-950/70 border border-amber-500/20 flex items-start justify-between gap-3">
+        <div class="space-y-1">
+          <div class="flex items-center gap-2">
+            <span class="px-2 py-0.5 text-[10px] font-bold rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">CALIBRATION OVERDUE</span>
+            <span class="text-xs font-bold text-white">{{ gauge.serial_number }}</span>
+            <span class="text-xs text-slate-400">({{ gauge.name }})</span>
+          </div>
+          <p class="text-xs text-amber-200/90">Calibration expired on {{ gauge.calibration_due_date|date:"d M Y" }}. Usage prohibited for official PDI.</p>
+          <p class="text-[11px] text-slate-500 font-mono">Location: {{ gauge.location|default:"Tool Crib" }}</p>
+        </div>
+        <a href="{% url 'master_setup:gauge_list' %}" class="px-2.5 py-1 text-xs font-semibold rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 transition flex-shrink-0">
+          View Gauge
+        </a>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- 4 Core Modules Navigation Grid -->
+  <div>
+    <h2 class="text-lg font-bold text-white mb-4 tracking-tight flex items-center gap-2">
+      <span>The 4 Quality Operations Modules (BRD Scope)</span>
+    </h2>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      
+      <!-- Card 1: Master Setup -->
+      <a href="{% url 'master_setup:department_list' %}" class="group p-5 rounded-2xl bg-slate-900/40 hover:bg-slate-900/80 border border-slate-800 hover:border-emerald-500/40 transition flex flex-col justify-between">
+        <div>
+          <div class="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center mb-4 group-hover:scale-105 transition">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+            </svg>
+          </div>
+          <span class="text-[10px] font-bold text-emerald-400 tracking-wider uppercase font-mono">Module 1</span>
+          <h3 class="text-base font-bold text-white mt-1 group-hover:text-emerald-300 transition">Master Setup</h3>
+          <p class="text-xs text-slate-400 mt-2 leading-relaxed">Plant departments, CNC machines, manufactured part numbers, and calibrated gauge registry.</p>
+        </div>
+        <div class="mt-4 pt-4 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400 group-hover:text-emerald-400">
+          <span>Manage Infrastructure</span>
+          <span>→</span>
+        </div>
+      </a>
+
+      <!-- Card 2: Calibration & Lock -->
+      <a href="{% url 'calibration:machine_lock_list' %}" class="group p-5 rounded-2xl bg-slate-900/40 hover:bg-slate-900/80 border border-slate-800 hover:border-rose-500/40 transition flex flex-col justify-between">
+        <div>
+          <div class="w-10 h-10 rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20 flex items-center justify-center mb-4 group-hover:scale-105 transition">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+            </svg>
+          </div>
+          <span class="text-[10px] font-bold text-rose-400 tracking-wider uppercase font-mono">Module 2</span>
+          <h3 class="text-base font-bold text-white mt-1 group-hover:text-rose-300 transition">Calibration & Lock</h3>
+          <p class="text-xs text-slate-400 mt-2 leading-relaxed">Automatic workstation interlocks, preventive maintenance schedules, and supervisor overrides.</p>
+        </div>
+        <div class="mt-4 pt-4 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400 group-hover:text-rose-400">
+          <span>Safety Interlocks</span>
+          <span>→</span>
+        </div>
+      </a>
+
+      <!-- Card 3: Material Intake & MTC -->
+      <a href="{% url 'material_intake:batch_list' %}" class="group p-5 rounded-2xl bg-slate-900/40 hover:bg-slate-900/80 border border-slate-800 hover:border-blue-500/40 transition flex flex-col justify-between">
+        <div>
+          <div class="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20 flex items-center justify-center mb-4 group-hover:scale-105 transition">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+          </div>
+          <span class="text-[10px] font-bold text-blue-400 tracking-wider uppercase font-mono">Module 3</span>
+          <h3 class="text-base font-bold text-white mt-1 group-hover:text-blue-300 transition">Material Intake & MTC</h3>
+          <p class="text-xs text-slate-400 mt-2 leading-relaxed">Dock receiving, Mill Test Certificate (MTC) chemistry & tensile verification, and SNCR quarantine.</p>
+        </div>
+        <div class="mt-4 pt-4 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400 group-hover:text-blue-400">
+          <span>Receiving & MTCs</span>
+          <span>→</span>
+        </div>
+      </a>
+
+      <!-- Card 4: PDI Inspection Checklists -->
+      <a href="{% url 'inspection:checklist_list' %}" class="group p-5 rounded-2xl bg-slate-900/40 hover:bg-slate-900/80 border border-slate-800 hover:border-teal-500/40 transition flex flex-col justify-between">
+        <div>
+          <div class="w-10 h-10 rounded-xl bg-teal-500/10 text-teal-400 border border-teal-500/20 flex items-center justify-center mb-4 group-hover:scale-105 transition">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+            </svg>
+          </div>
+          <span class="text-[10px] font-bold text-teal-400 tracking-wider uppercase font-mono">Module 4</span>
+          <h3 class="text-base font-bold text-white mt-1 group-hover:text-teal-300 transition">PDI Checklists</h3>
+          <p class="text-xs text-slate-400 mt-2 leading-relaxed">Checklist templates with tolerances, live tablet measurement input, and automated Pass/Fail engine.</p>
+        </div>
+        <div class="mt-4 pt-4 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400 group-hover:text-teal-400">
+          <span>Checklists & Sessions</span>
+          <span>→</span>
+        </div>
+      </a>
+
+    </div>
+  </div>
+
+  <!-- Recent Inspection Sessions -->
+  <div class="rounded-2xl bg-slate-900/60 border border-slate-800/80 p-5">
+    <div class="flex items-center justify-between mb-4">
+      <div>
+        <h3 class="text-sm font-bold text-white">Recent Shopfloor Quality Inspections</h3>
+        <p class="text-xs text-slate-400">Live records from Pre-Dispatch and In-Process checkpoints</p>
+      </div>
+      <a href="{% url 'inspection:record_list' %}" class="text-xs font-semibold text-emerald-400 hover:text-emerald-300 transition">
+        View All Records →
+      </a>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-xs">
+        <thead class="text-slate-400 border-b border-slate-800 uppercase tracking-wider text-[10px]">
+          <tr>
+            <th class="py-3 px-3">Session ID</th>
+            <th class="py-3 px-3">Part Component</th>
+            <th class="py-3 px-3">Batch / Serial #</th>
+            <th class="py-3 px-3">Inspector</th>
+            <th class="py-3 px-3">Date / Shift</th>
+            <th class="py-3 px-3">Overall Status</th>
+            <th class="py-3 px-3 text-right">Action</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-800/60 text-slate-300">
+          {% for r in recent_inspections %}
+          <tr class="hover:bg-slate-800/40 transition">
+            <td class="py-3 px-3 font-mono font-bold text-slate-300">#{{ r.id }}</td>
+            <td class="py-3 px-3">
+              <div class="font-semibold text-white">{{ r.checklist.part.part_number }}</div>
+              <div class="text-[11px] text-slate-400">{{ r.checklist.name }}</div>
+            </td>
+            <td class="py-3 px-3 font-mono text-slate-300">{{ r.batch_or_serial_number }}</td>
+            <td class="py-3 px-3">{{ r.inspector_name }}</td>
+            <td class="py-3 px-3 text-slate-400 font-mono">{{ r.inspection_date|date:"d M Y" }} • {{ r.shift }}</td>
+            <td class="py-3 px-3">
+              {% if r.overall_status == 'PASSED' %}
+                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> PASSED
+                </span>
+              {% elif r.overall_status == 'FAILED' %}
+                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                  <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span> FAILED
+                </span>
+              {% else %}
+                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/10 text-amber-300 border border-amber-500/20">
+                  <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span> IN PROGRESS
+                </span>
+              {% endif %}
+            </td>
+            <td class="py-3 px-3 text-right">
+              <a href="{% url 'inspection:record_detail' record_id=r.id %}" class="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 transition font-medium">
+                Enter Readings →
+              </a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="7" class="py-6 text-center text-slate-500">No inspection records logged yet.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
