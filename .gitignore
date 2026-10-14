@@ -32,6 +32,10 @@ Thumbs.db
 # Logs
 *.log
 
+# Node dependencies
+node_modules/
+package-lock.json
+
 #docs
 docs
 PROJECT_LOG.md

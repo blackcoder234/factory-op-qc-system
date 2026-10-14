@@ -1,0 +1,5 @@
+@import "tailwindcss";
+
+/* Scan templates across all apps and root templates */
+@source "../../templates/**/*.html";
+@source "../../**/templates/**/*.html";
