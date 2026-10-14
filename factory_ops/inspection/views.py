@@ -57,12 +57,10 @@ def record_list(request):
         form = InspectionRecordForm(request.POST)
         if form.is_valid():
             rec = form.save()
-            # If the selected machine is locked, show warning!
-            if rec.machine and rec.machine.is_locked:
-                messages.error(request, f'WARNING: Workstation "{rec.machine.machine_code}" is currently LOCKED due to overdue maintenance! Proceeding with inspection under deviation protocol.')
-            else:
-                messages.success(request, f'Inspection Session #{rec.id} started for Batch {rec.batch_or_serial_number}!')
+            messages.success(request, f'Inspection Session #{rec.id} started for Batch {rec.batch_or_serial_number}!')
             return redirect('inspection:record_detail', record_id=rec.id)
+        else:
+            messages.error(request, 'Cannot start inspection session: Workstation is locked or input is invalid. Please review errors below.')
     else:
         form = InspectionRecordForm()
 
@@ -83,6 +81,7 @@ def record_detail(request, record_id):
     """
     Live Inspection & Measurement Entry Sheet.
     Operator inputs dimensional readings; system validates tolerances and auto-flags Pass/Fail.
+    Enforces calibration validity — blocks entry if instrument calibration is expired.
     """
     record = get_object_or_404(InspectionRecord, pk=record_id)
     checklist_items = record.checklist.items.select_related('recommended_gauge').all()
@@ -102,12 +101,19 @@ def record_detail(request, record_id):
 
             item = get_object_or_404(ChecklistItem, pk=item_id, checklist=record.checklist)
             gauge = InspectionGauge.objects.filter(pk=gauge_id).first() if gauge_id else None
+            effective_gauge = gauge or item.recommended_gauge
 
             try:
                 val_float = float(actual_val)
-                # Check gauge calibration status
-                if gauge and gauge.is_calibration_expired:
-                    messages.warning(request, f'NOTICE: Measuring gauge "{gauge.serial_number}" calibration is EXPIRED! Calibration alert logged.')
+
+                # Check gauge calibration status — Strict BRD Clause 2.3 Enforcement
+                if effective_gauge and effective_gauge.is_calibration_expired:
+                    messages.error(
+                        request,
+                        f'MEASUREMENT ENTRY BLOCKED: Measuring instrument "{effective_gauge.serial_number}" calibration EXPIRED on {effective_gauge.calibration_due_date}! '
+                        f'ISO 9001 and BRD Section 1/2 strictly prohibit recording quality measurements with uncalibrated tools.'
+                    )
+                    return redirect('inspection:record_detail', record_id=record.id)
 
                 # Update or create reading
                 reading, created = MeasurementReading.objects.get_or_create(

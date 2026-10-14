@@ -189,10 +189,10 @@
                 <!-- Instrument Selector -->
                 <div class="flex-1 min-w-[140px]">
                   <select name="gauge_id" class="w-full px-2 py-1.5 bg-slate-950 border border-slate-700 rounded-lg text-slate-300 text-[11px] focus:outline-none focus:border-teal-500">
-                    <option value="">Default: {{ row.item.recommended_gauge.serial_number|default:"Bench Tool" }}</option>
+                    <option value="">Default: {{ row.item.recommended_gauge.serial_number|default:"Bench Tool" }}{% if row.item.recommended_gauge and row.item.recommended_gauge.is_calibration_expired %} ⛔ [EXPIRED]{% endif %}</option>
                     {% for g in gauges %}
-                      <option value="{{ g.id }}" {% if row.reading and row.reading.used_gauge_id == g.id %}selected{% endif %}>
-                        {{ g.serial_number }} ({{ g.name }}) {% if g.is_calibration_expired %}⚠ EXPIRED{% endif %}
+                      <option value="{{ g.id }}" {% if row.reading and row.reading.used_gauge_id == g.id %}selected{% endif %} {% if g.is_calibration_expired %}class="text-rose-400 font-semibold"{% endif %}>
+                        {{ g.serial_number }} ({{ g.name }}) {% if g.is_calibration_expired %}⛔ [EXPIRED: {{ g.calibration_due_date|date:"d M Y" }}]{% else %}✓ [Calibrated]{% endif %}
                       </option>
                     {% endfor %}
                   </select>

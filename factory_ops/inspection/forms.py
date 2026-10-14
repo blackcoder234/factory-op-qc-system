@@ -36,14 +36,37 @@ class InspectionRecordForm(forms.ModelForm):
         model = InspectionRecord
         fields = ['checklist', 'machine', 'batch_or_serial_number', 'inspector_name', 'inspection_date', 'shift', 'remarks']
         widgets = {
-            'checklist': forms.Select(attrs={'class': 'w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm'}),
-            'machine': forms.Select(attrs={'class': 'w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm'}),
-            'batch_or_serial_number': forms.TextInput(attrs={'class': 'w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm', 'placeholder': 'e.g. BATCH-2026-001'}),
-            'inspector_name': forms.TextInput(attrs={'class': 'w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm'}),
-            'inspection_date': forms.DateInput(attrs={'type': 'date', 'class': 'w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm'}),
-            'shift': forms.Select(attrs={'class': 'w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm'}),
-            'remarks': forms.Textarea(attrs={'class': 'w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm', 'rows': 2}),
+            'checklist': forms.Select(attrs={'class': 'w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:border-teal-500'}),
+            'machine': forms.Select(attrs={'class': 'w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:border-teal-500'}),
+            'batch_or_serial_number': forms.TextInput(attrs={'class': 'w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:border-teal-500', 'placeholder': 'e.g. BATCH-2026-001'}),
+            'inspector_name': forms.TextInput(attrs={'class': 'w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:border-teal-500'}),
+            'inspection_date': forms.DateInput(attrs={'type': 'date', 'class': 'w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:border-teal-500'}),
+            'shift': forms.Select(attrs={'class': 'w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:border-teal-500'}),
+            'remarks': forms.Textarea(attrs={'class': 'w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:border-teal-500', 'rows': 2}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        from master_setup.models import Machine
+        machines = Machine.objects.select_related('lock_status').all()
+        machine_choices = [('', '--------- (Select Workstation)')]
+        for m in machines:
+            if m.is_locked:
+                reason = m.lock_status.get_reason_code_display() if hasattr(m, 'lock_status') and m.lock_status else "PM Overdue"
+                machine_choices.append((m.id, f"{m.machine_code} — {m.name} 🔒 [LOCKED: {reason}]"))
+            else:
+                machine_choices.append((m.id, f"{m.machine_code} — {m.name} ✓ [Operational]"))
+        self.fields['machine'].choices = machine_choices
+
+    def clean_machine(self):
+        machine = self.cleaned_data.get('machine')
+        if machine and machine.is_locked:
+            reason = machine.lock_status.get_reason_code_display() if hasattr(machine, 'lock_status') and machine.lock_status else "Preventive Maintenance Overdue"
+            raise forms.ValidationError(
+                f"Workstation '{machine.machine_code}' is currently LOCKED ({reason})! "
+                f"Safety interlock prohibits job assignment until maintenance is cleared and released by a supervisor."
+            )
+        return machine
 
 class MeasurementReadingForm(forms.ModelForm):
     class Meta:
