@@ -2,14 +2,16 @@
 
 # 🏭 Factory Operations & Quality Control System (FactoryOps QC)
 
-### Enterprise Shopfloor Quality Management & Interlock Safety Platform
-Built for **Zapuza Technologies LLP** — Python Django Developer Internship Assessment
+### Enterprise Shopfloor Quality Assurance & Zero-Escape Interlock Safety Platform
+Built for **Zapuza Technologies LLP** — Python Django Developer Internship Assessment  
+Facility: **Apex Precision Dynamics Ltd. — Plant APX-09**
 
 [![Django](https://img.shields.io/badge/Django-5.2+-092E20?style=for-the-badge&logo=django&logoColor=white)](https://www.djangoproject.com/)
 [![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4.0-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+[![Tests](https://img.shields.io/badge/Tests-39%20Passed%20%E2%9C%93-emerald?style=for-the-badge)](#-automated-testing-suite)
+[![Security](https://img.shields.io/badge/Security-RBAC%20%26%20Zero--Escape-blue?style=for-the-badge)](#-security--production-hardening)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
-[![Status](https://img.shields.io/badge/Status-Complete-emerald?style=for-the-badge)](#)
 
 </div>
 
@@ -17,55 +19,146 @@ Built for **Zapuza Technologies LLP** — Python Django Developer Internship Ass
 
 ## 📌 Executive Summary
 
-In precision manufacturing facilities, paper logbooks and manual inspection sheets lead to quality escapes, overdue machine tool operations, and untraceable metallurgical deviations.
+In precision mechanical manufacturing facilities, paper logbooks and manual inspection checklists lead to quality escapes, overdue machine tool operations, and untraceable metallurgical deviations. 
 
-**FactoryOps QC** digitizes the entire shopfloor quality lifecycle into a unified, audit-compliant web application covering the 4 core quality pillars specified in the Business Requirements Document (BRD v5.0):
+**FactoryOps QC** digitizes the entire shopfloor manufacturing quality lifecycle into a unified, audit-compliant web application. Built for **Apex Precision Dynamics (Plant APX-09)**, the platform replaces paper logbooks with server-side enforced digital quality gates, strict role-based access control (RBAC), instrument calibration tracking, and an atomic zero-escape dispatch clearance workflow conforming to ISO 9001 requirements.
+
+---
+
+## 🏗️ 5 Core Operational Modules & Quality Pillars
 
 <table>
-  <tr>
-    <td width="30%">🏭 <b>Module 1: Master Setup</b></td>
-    <td>Registers factory departments, CNC machine tools, manufactured parts (with drawing numbers and revisions), and precision gauges with calibration due tracking.</td>
-  </tr>
-  <tr>
-    <td>🔒 <b>Module 2: Calibration & Lock</b></td>
-    <td>Enforces preventive maintenance (PM) schedules; automatically detects overdue equipment and disables job selection/measurements to prevent out-of-spec production.</td>
-  </tr>
-  <tr>
-    <td>📦 <b>Module 3: Material Intake & MTC</b></td>
-    <td>Dock receiving workflow logging Heat Numbers, Purchase Orders, chemical composition tolerances (C, Mn, Si, P, S), mechanical properties (UTS, YS, Hardness), and Supplier Non-Conformance (SNCR) quarantine flows.</td>
-  </tr>
-  <tr>
-    <td>📐 <b>Module 4: PDI Checklists</b></td>
-    <td>Inspection template design studio defining nominal dimensions and tolerances (e.g., $50.00 \pm 0.02\text{ mm}$) with real-time automated <b>PASS / FAIL</b> evaluation upon measurement entry.</td>
-  </tr>
+  <thead>
+    <tr>
+      <th width="28%">Operational Module</th>
+      <th>Quality Assurance Scope & Server-Side Interlocks</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>🏭 <b>Module 1: Master Setup</b></td>
+      <td>
+        Registers factory manufacturing departments, CNC workstation telemetry, engineered parts (with blueprint drawing numbers and CAD revisions), and precision gauges with calibration due date tracking.
+      </td>
+    </tr>
+    <tr>
+      <td>🔒 <b>Module 2: Calibration &amp; Workstation Lock</b></td>
+      <td>
+        Enforces preventive maintenance (PM) schedules. Automatically detects overdue equipment and disables job selection and measurement recording via safety interlocks to prevent out-of-spec production.
+      </td>
+    </tr>
+    <tr>
+      <td>📦 <b>Module 3: Material Intake &amp; MTC Verification</b></td>
+      <td>
+        Inward dock receiving workflow tracking supplier heat numbers, purchase orders, chemical composition tolerances (C, Mn, Si, P, S), mechanical properties (UTS, YS, Hardness, Elongation), and Supplier Non-Conformance (SNCR) quarantine flows. Features strict document validation (10MB limit, file signatures, sanitized filenames) and multi-point server-side batch acceptance gating.
+      </td>
+    </tr>
+    <tr>
+      <td>📐 <b>Module 4: Quality Inspections &amp; PDI</b></td>
+      <td>
+        Inspection checklist template studio defining nominal dimensions and tolerances ($50.00 \pm 0.02\text{ mm}$) with real-time automated <b>PASS / FAIL</b> evaluation upon measurement entry. Enforces finite float validation, rejects expired/inactive measuring instruments, and requires formal supervisor sign-off before downstream processing.
+      </td>
+    </tr>
+    <tr>
+      <td>🚢 <b>Module 5: Zero-Escape Dispatch Clearance</b></td>
+      <td>
+        Database-backed shipping release gate linking finished parts to raw material heat lots, intermediate shopfloor routing operations, mandatory process hold periods (e.g. stress relief cooling), and approved PDI inspection records. release authorization requires Quality Manager or Plant Manager sign-off wrapped in atomic database locks.
+      </td>
+    </tr>
+  </tbody>
 </table>
 
 ---
 
-## 🏗️ Architecture & Decoupled Apps
+## 🔐 Standardized Role-Based Access Control (RBAC)
 
-The system follows Django's clean modular architecture with 4 independent feature applications:
+The application implements a 5-role operational hierarchy enforced at the server level via Django Groups and custom view decorators (`@role_required` and `check_action_permission`). Unauthorized actions are rejected with HTTP 403 Forbidden pages:
+
+| Operational Role | Typical Persona | Permissions & Operational Scope |
+|---|---|---|
+| **Plant / General Manager** | Plant Director | Full plant oversight, workstation lock management, and final shipping dispatch clearance release authority. |
+| **Quality Engineer** | Metrology Engineer | Setup management, MTC document & metallurgical verification, checklist template creation, and dimensional measurement entry. |
+| **Quality Manager** | Head of Quality Assurance | Unrestricted quality authority: material batch release acceptance, checklist authoring, inspection sign-off, and final dispatch clearance. |
+| **Shift Supervisor** | Shopfloor Lead | Workstation lockout/release, maintenance logging, inspection session creation, and supervisor sign-off approval. |
+| **QA Floor Inspector** | Receiving & Floor Inspector | Inward material dock logging, starting inspection sessions, and recording physical dimensional readings. Blocked from approving or clearing dispatches. |
+
+### Server-Side Permission Matrix
+
+| Action / Endpoint | Floor Inspector | Shift Supervisor | Quality Engineer | Quality Manager | Plant Manager |
+|---|:---:|:---:|:---:|:---:|:---:|
+| **Dock Material Intake** | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Verify MTC Chemistry/Mechanics** | ❌ | ❌ | ✅ | ✅ | ❌ |
+| **Accept Material Batch Gate** | ❌ | ❌ | ❌ | ✅ | ❌ |
+| **Lock / Unlock Workstations** | ❌ | ✅ | ❌ | ✅ | ✅ |
+| **Create Checklist Templates** | ❌ | ❌ | ✅ | ✅ | ❌ |
+| **Enter Dimensional Measurements** | ✅ | ❌ | ✅ | ✅ | ❌ |
+| **Approve / Sign Off Inspection** | ❌ | ✅ | ❌ | ✅ | ❌ |
+| **Authorize Dispatch Clearance** | ❌ | ❌ | ❌ | ✅ | ✅ |
+
+---
+
+## 🛡️ Security & Production Hardening
+
+- **Dynamic Environment Loading**: `SECRET_KEY`, `DEBUG`, `ALLOWED_HOSTS`, and admin credentials are loaded from environment variables (`.env`) via `python-dotenv`.
+- **Fail-Closed Production Default**: `DEBUG` defaults to `False` if not set; `SECRET_KEY` raises an immediate `ImproperlyConfigured` exception in production if missing.
+- **CSRF-Protected State Changes**: All state mutations (locking workstations, saving readings, approving records, and logging out) use CSRF-protected `POST` requests. `GET /logout/` is rejected with `405 Method Not Allowed`.
+- **Zero Exposed Demo Credentials**: Public login page autofill credentials and displayed passwords have been removed and replaced with an ISO 9001 plant security terminal notice.
+- **Sanitized Upload Pipeline**: Mill Test Certificates are strictly validated against a 10MB limit and allowed extensions (`.pdf`, `.png`, `.jpg`, `.jpeg`, `.tif`, `.tiff`) with UUID-sanitized filenames.
+- **Finiteness & Overflow Protection**: All measurement inputs are validated against non-finite values (`NaN`, `Infinity`) and clamped within physically realistic bounds.
+- **Concurrency Protection**: Dispatch clearance authorization is protected with `transaction.atomic()` and `select_for_update()` to prevent race conditions during shipping release.
+
+---
+
+## 📁 Architecture & Decoupled Apps
 
 ```text
 factory-op-qc-system/
 │
 ├── factory_ops/                     # Django Project Root
 │   ├── manage.py                    # Django CLI Management Tool
-│   ├── package.json                 # Tailwind CSS v4 compiler config
+│   ├── package.json                 # Tailwind CSS v4 build script
 │   │
-│   ├── factory_ops/                 # Master Configuration (settings.py, urls.py, wsgi.py)
-│   ├── master_setup/                # Module 1: Departments, Machines, Parts, Gauges
-│   ├── calibration/                 # Module 2: Maintenance Records, Machine Lock Logic
-│   ├── material_intake/             # Module 3: Heat Nos, MTC Chemistry & Mechanics, SNCR
-│   ├── inspection/                  # Module 4: Checklists, Tolerance Engine, Auto Pass/Fail
+│   ├── factory_ops/                 # Core Configuration
+│   │   ├── settings.py              # Environment config, security middleware, DB settings
+│   │   ├── urls.py                  # Master URL routing table
+│   │   └── wsgi.py                  # WSGI application entrypoint
 │   │
-│   ├── templates/                   # Tailwind CSS v4 DTL templates
-│   ├── static/                      # Compiled CSS (tailwind.css, custom.css)
-│   └── media/                       # Uploaded MTC documents & certificates
+│   ├── master_setup/                # Module 1: Master Factory Infrastructure
+│   │   ├── models.py                # Department, Machine, Part, InspectionGauge
+│   │   ├── rbac.py                  # 5 Standardized Roles, decorators, permission checks
+│   │   ├── context_processors.py    # Primary role injection for navbar profile badge
+│   │   └── management/commands/     # 'seed_data' realistic demonstration data generator
+│   │
+│   ├── calibration/                 # Module 2: Workstation Locks & PM Schedules
+│   │   ├── models.py                # WorkstationLock, MaintenanceRecord, MachineCalibrationRecord
+│   │   └── views.py                 # Lockout toggles with role-based checks
+│   │
+│   ├── material_intake/             # Module 3: Raw Materials & MTC Conformance
+│   │   ├── models.py                # MaterialBatch, ChemicalComposition, MechanicalProperties, SNCR
+│   │   ├── validators.py            # MTC upload validation, percentage bounds, finite numbers
+│   │   └── views.py                 # Dock receiving, MTC upload, acceptance gate
+│   │
+│   ├── inspection/                  # Modules 4 & 5: Dimensional QC & Dispatch Clearance
+│   │   ├── models.py                # InspectionRecord, ChecklistItem, MeasurementReading,
+│   │   │                            # ProductionOperation, DispatchClearance
+│   │   ├── validators.py            # validate_measurement_value (NaN/Inf protection)
+│   │   ├── forms.py                 # Tolerance entry, gauge calibration checks, dispatch forms
+│   │   └── views.py                 # Live inspection entry, supervisor review, dispatch release
+│   │
+│   ├── templates/                   # Clean, dark-mode industrial DTL templates
+│   │   ├── base.html                # Navigation, flash messages, user role badge, POST logout
+│   │   ├── 403.html                 # Custom industrial HTTP 403 Access Denied page
+│   │   ├── landing.html             # Public plant overview and statistics
+│   │   ├── auth/login.html          # Secure terminal authentication
+│   │   ├── master_setup/            # Department, machine, gauge, dashboard views
+│   │   ├── material_intake/         # Receiving lists, MTC audit cards, acceptance gates
+│   │   └── inspection/              # Checklists, PDI sheets, dispatch release gates
+│   │
+│   ├── static/css/                  # Compiled Tailwind CSS v4 assets
+│   └── media/                       # Uploaded Mill Test Certificates
 │
 ├── requirements.txt                 # Pinned Python package dependencies
-├── .gitignore                       # Clean Git exclusion rules
-├── LICENSE                          # MIT Open Source License
+├── .env.example                     # Environment configuration template
 └── README.md                        # Documentation & setup guide
 ```
 
@@ -73,22 +166,23 @@ factory-op-qc-system/
 
 ## 🛠️ Technology Stack
 
-| Component | Technology | Rationale |
+| Layer | Technology | Details & Rationale |
 |---|---|---|
-| **Backend Framework** | **Python 3.10+ / Django 5.x** | Batteries-included, ORM, CSRF protection, admin panel |
-| **Styling & UI** | **Tailwind CSS v4 + Vanilla CSS** | Enterprise dark-mode design, responsive tables, zero CDN latency |
-| **Typography** | **Plus Jakarta Sans & JetBrains Mono** | Modern enterprise feel with legible numerical measurements |
-| **Database** | **SQLite (Dev) / PostgreSQL Ready** | Zero-config local development with atomic transaction safety |
-| **File Storage** | **Django FileField** | Upload and archive Mill Test Certificates (PDF) |
-| **Version Control** | **Git & GitHub** | Clean commit history and branch management |
+| **Backend Framework** | **Python 3.10+ / Django 5.2** | Battery-packed ORM, secure authentication, CSRF protection, and migration engine |
+| **Styling & Design** | **Tailwind CSS v4 + Vanilla CSS** | Custom dark industrial design system with emerald/rose status semantics |
+| **Typography** | **Plus Jakarta Sans & JetBrains Mono** | High-contrast monospace fonts for tolerances, heat numbers, and readings |
+| **Database** | **SQLite (Dev) / PostgreSQL Ready** | Multi-table relational integrity with atomic transactions and row-level locking |
+| **File Storage** | **Django FileField** | Validated, hashed storage for supplier Mill Test Certificates (PDF/images) |
+| **Environment** | **python-dotenv** | Explicit environment variable separation for zero credentials in git |
 
 ---
 
-## 🚀 Getting Started (Run Locally)
+## 🚀 Local Setup & Installation
 
 ### 1. Prerequisites
-* Python 3.10 or higher
-* Git
+* **Python 3.10** or higher
+* **Git**
+* **Node.js 18+** *(optional, only if recompiling Tailwind CSS)*
 
 ### 2. Clone the Repository
 ```bash
@@ -112,40 +206,81 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 5. Apply Database Migrations
+### 5. Configure Environment Variables
+Copy the template configuration file:
+```bash
+cp factory_ops/.env.example factory_ops/.env
+```
+Edit `factory_ops/.env`:
+```env
+SECRET_KEY=generate-a-secure-random-key-here
+DEBUG=True
+ALLOWED_HOSTS=127.0.0.1,localhost
+SEED_ADMIN_PASSWORD=YourSecurePassword123!
+```
+
+### 6. Apply Database Migrations
 ```bash
 cd factory_ops
 python manage.py migrate
 ```
 
-### 6. Populate Realistic Demo Data (Optional but Recommended)
-Populates realistic factory bays, machines, calibrated gauges, steel heat batches, and PDI checklists:
+### 7. Populate Realistic Factory Demo Data
+Populates plant departments, CNC machines, precision gauges, steel heats, PDI inspection sessions, production operations, and dispatch clearance records:
 ```bash
-python manage.py seed_data
+python manage.py seed_data --admin-password YourSecurePassword123!
 ```
-
-### 7. Create Superuser (Admin Access)
-```bash
-python manage.py createsuperuser
-```
+*Note: This command provisions the 5 standard operational roles, creates the `supervisor` user, and sets up realistic simulated shopfloor records.*
 
 ### 8. Run the Development Server
 ```bash
 python manage.py runserver
 ```
 
-Visit the application in your browser:
-* **Plant Overview Dashboard:** [http://127.0.0.1:8000/](http://127.0.0.1:8000/)
+Open your browser:
+* **Plant Overview Dashboard:** [http://127.0.0.1:8000/dashboard/](http://127.0.0.1:8000/dashboard/)
 * **Workstation Lock Board:** [http://127.0.0.1:8000/calibration/](http://127.0.0.1:8000/calibration/)
 * **Raw Material Intake & MTC:** [http://127.0.0.1:8000/materials/](http://127.0.0.1:8000/materials/)
-* **PDI Inspection Sheet:** [http://127.0.0.1:8000/inspection/records/1/](http://127.0.0.1:8000/inspection/records/1/)
+* **Quality Inspections (PDI):** [http://127.0.0.1:8000/inspection/records/](http://127.0.0.1:8000/inspection/records/)
+* **Dispatch Clearance Gate:** [http://127.0.0.1:8000/inspection/dispatch/](http://127.0.0.1:8000/inspection/dispatch/)
 * **Django Admin Panel:** [http://127.0.0.1:8000/admin/](http://127.0.0.1:8000/admin/)
 
 ---
 
-## 🎨 Rebuilding CSS (Optional)
+## 🧪 Automated Testing Suite
 
-The pre-compiled CSS bundle is already committed in `static/css/tailwind.css`, so **no Node.js build step is required** to run the app. If you modify template classes and wish to recompile:
+The repository includes **39 automated unit and integration tests** testing all core business rules and security controls:
+
+```bash
+cd factory_ops
+python manage.py test
+```
+
+### Test Suite Execution Output
+```text
+Creating test database for alias 'default'...
+Found 39 test(s).
+System check identified no issues (0 silenced).
+.......................................
+----------------------------------------------------------------------
+Ran 39 tests in 58.486s
+
+OK
+Destroying test database for alias 'default'...
+```
+
+### Test Coverage Highlights
+- **Authentication & RBAC (`master_setup/tests.py`)**: Tests login redirects, CSRF-protected POST logout, group role assignments, and 403 Forbidden enforcement on restricted endpoints.
+- **Workstation Safety Interlocks (`calibration/tests.py`)**: Tests automated overdue PM detection, workstation lock toggles, and role permission validation for equipment release.
+- **Material Intake & Acceptance Gating (`material_intake/tests.py`)**: Tests 10MB MTC file validation, chemistry range bounds, mechanical property validation, open SNCR blocking, and Quality Manager exclusive batch release.
+- **Dimensional Inspections (`inspection/tests.py`)**: Tests numerical tolerance calculations, `validate_measurement_value` rejection of `NaN`/`Infinity`/overflows, expired gauge measurement lockout, supervisor approval sign-off, and inspector 403 rejection.
+- **Dispatch Clearance Gates (`inspection/tests.py`)**: Tests rejection when raw material is unaccepted or has open SNCRs, rejection when production operations are incomplete or hold times unelapsed, rejection when PDI is failing or unsigned, and successful atomic release by Quality Manager or Plant Manager.
+
+---
+
+## 🎨 Rebuilding Tailwind CSS (Optional)
+
+The pre-compiled CSS bundle is already committed in `static/css/tailwind.css`. If you customize templates and want to recompile:
 
 ```bash
 cd factory_ops
@@ -155,18 +290,12 @@ npm run build:css
 
 ---
 
-## 🎥 Video Walkthrough & Demo
+## 👤 Author & Assessment Submission
 
-* **Video Walkthrough Link:** [Insert your Loom / YouTube demo video link here]  
-  *(A comprehensive screen recording with voice narration explaining the code architecture, models, and a live demonstration of all 4 modules).*
-
----
-
-## 👤 Author
-
-* **Developer:** [Amarnath Bera](https://amarnathbera.in)
-* **Contact:** [beraamarnath5@gmail.com](mailto:beraamarnath5@gmail.com)
+* **Candidate:** [Amarnath Bera](https://amarnathbera.in)
+* **Email:** [beraamarnath5@gmail.com](mailto:beraamarnath5@gmail.com)
 * **GitHub:** [@blackcoder234](https://github.com/blackcoder234)
+* **Repository:** [https://github.com/blackcoder234/factory-op-qc-system](https://github.com/blackcoder234/factory-op-qc-system)
 
 ---
 

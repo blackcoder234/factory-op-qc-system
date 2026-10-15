@@ -1,5 +1,7 @@
 from django import forms
 from .models import MaterialBatch, ChemicalComposition, MechanicalProperties, SupplierNonConformance
+from .validators import validate_mtc_document
+
 
 class MaterialBatchForm(forms.ModelForm):
     class Meta:
@@ -19,6 +21,32 @@ class MaterialBatchForm(forms.ModelForm):
             'notes': forms.Textarea(attrs={'class': 'w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-emerald-500 text-sm', 'rows': 2}),
         }
 
+    def clean_mtc_document(self):
+        doc = self.cleaned_data.get('mtc_document')
+        if doc:
+            validate_mtc_document(doc)
+        return doc
+
+
+class MtcDocumentUploadForm(forms.ModelForm):
+    """Form to upload or replace MTC document from the batch detail verification workspace."""
+    class Meta:
+        model = MaterialBatch
+        fields = ['mtc_document']
+        widgets = {
+            'mtc_document': forms.FileInput(attrs={
+                'class': 'w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-slate-300 focus:outline-none focus:border-emerald-500 text-sm file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-emerald-500/10 file:text-emerald-400 hover:file:bg-emerald-500/20'
+            })
+        }
+
+    def clean_mtc_document(self):
+        doc = self.cleaned_data.get('mtc_document')
+        if not doc:
+            raise forms.ValidationError("Please select a valid MTC file to upload.")
+        validate_mtc_document(doc)
+        return doc
+
+
 class ChemicalCompositionForm(forms.ModelForm):
     class Meta:
         model = ChemicalComposition
@@ -35,6 +63,15 @@ class ChemicalCompositionForm(forms.ModelForm):
             'verified_by': forms.TextInput(attrs={'class': 'w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm'}),
         }
 
+    def clean(self):
+        cleaned_data = super().clean()
+        is_ok = cleaned_data.get('is_composition_ok')
+        verified_by = cleaned_data.get('verified_by')
+        if is_ok and not verified_by:
+            self.add_error('verified_by', 'Name of verifying chemist or metallurgist is required when confirming specification conformance.')
+        return cleaned_data
+
+
 class MechanicalPropertiesForm(forms.ModelForm):
     class Meta:
         model = MechanicalProperties
@@ -49,6 +86,15 @@ class MechanicalPropertiesForm(forms.ModelForm):
             'verified_by': forms.TextInput(attrs={'class': 'w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm'}),
         }
 
+    def clean(self):
+        cleaned_data = super().clean()
+        is_ok = cleaned_data.get('is_properties_ok')
+        verified_by = cleaned_data.get('verified_by')
+        if is_ok and not verified_by:
+            self.add_error('verified_by', 'Name of verifying quality engineer is required when confirming criteria satisfaction.')
+        return cleaned_data
+
+
 class SupplierNonConformanceForm(forms.ModelForm):
     class Meta:
         model = SupplierNonConformance
@@ -61,3 +107,4 @@ class SupplierNonConformanceForm(forms.ModelForm):
             'reason': forms.Textarea(attrs={'class': 'w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm', 'rows': 3}),
             'raised_by': forms.TextInput(attrs={'class': 'w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm'}),
         }
+

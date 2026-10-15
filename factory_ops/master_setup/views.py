@@ -9,7 +9,7 @@ from .forms import DepartmentForm, MachineForm, PartForm, InspectionGaugeForm
 
 from calibration.models import WorkstationLock, MaintenanceRecord
 from material_intake.models import MaterialBatch, SupplierNonConformance
-from inspection.models import InspectionRecord, InspectionChecklist
+from inspection.models import InspectionRecord, InspectionChecklist, DispatchClearance
 
 def home(request):
     """Apex Precision Dynamics — Public Company & Plant Overview Landing Page."""
@@ -51,8 +51,11 @@ def user_login(request):
     return render(request, 'auth/login.html')
 
 
+from django.views.decorators.http import require_POST
+
+@require_POST
 def user_logout(request):
-    """Terminate terminal session."""
+    """Terminate terminal session via CSRF-protected POST."""
     auth_logout(request)
     messages.info(request, 'Terminal session terminated. You have been logged out.')
     return redirect('master_setup:home')
@@ -91,6 +94,14 @@ def dashboard(request):
     # Recent inspection activity
     recent_inspections = InspectionRecord.objects.select_related('checklist', 'checklist__part').order_by('-created_at')[:5]
 
+    # Checklists
+    total_checklists = InspectionChecklist.objects.filter(is_active=True).count()
+
+    # Dispatch Clearances
+    total_dispatches = DispatchClearance.objects.count()
+    cleared_dispatches = DispatchClearance.objects.filter(status='CLEARED').count()
+    pending_dispatches = DispatchClearance.objects.filter(status='PENDING_AUDIT').count()
+
     context = {
         'total_departments': total_departments,
         'total_machines': total_machines,
@@ -108,15 +119,26 @@ def dashboard(request):
         'passed_inspections': passed_inspections,
         'failed_inspections': failed_inspections,
         'pass_rate': pass_rate,
+        'total_checklists': total_checklists,
         'recent_inspections': recent_inspections,
+        'total_dispatches': total_dispatches,
+        'cleared_dispatches': cleared_dispatches,
+        'pending_dispatches': pending_dispatches,
     }
     return render(request, 'master_setup/dashboard.html', context)
 
 
+from master_setup.rbac import check_action_permission, ROLES_CAN_MANAGE_SETUP
+from django.core.exceptions import PermissionDenied
+
+
+@login_required(login_url='master_setup:login')
 def department_list(request):
     """List all factory departments and handle department creation."""
     departments = Department.objects.prefetch_related('machines').all()
     if request.method == 'POST':
+        if not check_action_permission(request.user, *ROLES_CAN_MANAGE_SETUP):
+            raise PermissionDenied("Access Denied: Your assigned role does not permit creating departments.")
         form = DepartmentForm(request.POST)
         if form.is_valid():
             dept = form.save()
@@ -131,10 +153,13 @@ def department_list(request):
     })
 
 
+@login_required(login_url='master_setup:login')
 def machine_list(request):
     """List all machine tools and workstations."""
     machines = Machine.objects.select_related('department').all()
     if request.method == 'POST':
+        if not check_action_permission(request.user, *ROLES_CAN_MANAGE_SETUP):
+            raise PermissionDenied("Access Denied: Your assigned role does not permit registering machines.")
         form = MachineForm(request.POST)
         if form.is_valid():
             m = form.save()
@@ -151,10 +176,13 @@ def machine_list(request):
     })
 
 
+@login_required(login_url='master_setup:login')
 def part_list(request):
     """List all manufactured components."""
     parts = Part.objects.all()
     if request.method == 'POST':
+        if not check_action_permission(request.user, *ROLES_CAN_MANAGE_SETUP):
+            raise PermissionDenied("Access Denied: Your assigned role does not permit modifying the part catalog.")
         form = PartForm(request.POST)
         if form.is_valid():
             part = form.save()
@@ -169,10 +197,13 @@ def part_list(request):
     })
 
 
+@login_required(login_url='master_setup:login')
 def gauge_list(request):
     """List inspection gauges with calibration due date tracking."""
     gauges = InspectionGauge.objects.all()
     if request.method == 'POST':
+        if not check_action_permission(request.user, *ROLES_CAN_MANAGE_SETUP):
+            raise PermissionDenied("Access Denied: Your assigned role does not permit registering gauges.")
         form = InspectionGaugeForm(request.POST)
         if form.is_valid():
             g = form.save()

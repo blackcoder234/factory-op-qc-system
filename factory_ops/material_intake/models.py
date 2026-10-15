@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils import timezone
 from master_setup.models import Part
+from .validators import validate_mtc_document, validate_percentage, validate_positive_finite
 
 class MaterialBatch(models.Model):
     """Raw material intake batch logged at the receiving dock."""
@@ -26,6 +27,7 @@ class MaterialBatch(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
     mtc_document = models.FileField(
         upload_to='mtc_documents/', null=True, blank=True,
+        validators=[validate_mtc_document],
         help_text="Original Mill Test Certificate (PDF / Scanned Certificate)"
     )
     dock_inspector = models.CharField(max_length=100, blank=True, help_text="Person who logged the physical delivery")
@@ -40,19 +42,85 @@ class MaterialBatch(models.Model):
     def __str__(self):
         return f"Heat# {self.heat_number} ({self.material_grade}) — {self.supplier_name}"
 
+    def get_acceptance_blockers(self):
+        """
+        Evaluate and return all blocking reasons preventing this batch from being accepted.
+        Returns an empty list if all prerequisites are fulfilled.
+        """
+        blockers = []
+
+        # 1. State check
+        if self.status == 'REJECTED':
+            blockers.append("Batch is marked as REJECTED. Material cannot be accepted without formal engineering disposition.")
+
+        # 2. MTC Document check
+        if not bool(self.mtc_document):
+            blockers.append("Original Mill Test Certificate (MTC) file is missing. An official certificate must be uploaded.")
+
+        # 3. Chemical composition verification check
+        if not hasattr(self, 'chemical_composition'):
+            blockers.append("Chemical composition analysis has not been recorded.")
+        else:
+            chem = self.chemical_composition
+            if chem.is_composition_ok is not True:
+                blockers.append("Chemical composition has not conformed to material specifications.")
+            if not chem.verified_at:
+                blockers.append("Chemical composition verification timestamp is missing.")
+
+        # 4. Mechanical properties verification check
+        if not hasattr(self, 'mechanical_properties'):
+            blockers.append("Mechanical properties testing has not been recorded.")
+        else:
+            mech = self.mechanical_properties
+            if mech.is_properties_ok is not True:
+                blockers.append("Mechanical properties do not satisfy engineering criteria.")
+            if not mech.verified_at:
+                blockers.append("Mechanical properties verification timestamp is missing.")
+
+        # 5. Non-conformance check
+        unresolved_sncrs = self.non_conformances.filter(is_resolved=False)
+        if unresolved_sncrs.exists():
+            blockers.append(f"Batch has {unresolved_sncrs.count()} unresolved Supplier Non-Conformance Report(s) (SNCR).")
+
+        return blockers
+
+    @property
+    def can_be_accepted(self):
+        return len(self.get_acceptance_blockers()) == 0
+
+    @property
+    def is_chemistry_passed(self):
+        return (
+            hasattr(self, 'chemical_composition') and
+            self.chemical_composition.is_composition_ok is True and
+            self.chemical_composition.verified_at is not None
+        )
+
+    @property
+    def is_mechanical_passed(self):
+        return (
+            hasattr(self, 'mechanical_properties') and
+            self.mechanical_properties.is_properties_ok is True and
+            self.mechanical_properties.verified_at is not None
+        )
+
+    @property
+    def has_unresolved_sncr(self):
+        return self.non_conformances.filter(is_resolved=False).exists()
+
 
 class ChemicalComposition(models.Model):
     """Chemical analysis percentages extracted from the MTC."""
     batch = models.OneToOneField(
         MaterialBatch, on_delete=models.CASCADE, related_name='chemical_composition'
     )
-    carbon = models.FloatField(help_text="Carbon % (C)")
-    manganese = models.FloatField(help_text="Manganese % (Mn)")
-    silicon = models.FloatField(help_text="Silicon % (Si)")
-    phosphorus = models.FloatField(null=True, blank=True, default=0.025, help_text="Phosphorus % (P) - max")
-    sulfur = models.FloatField(null=True, blank=True, default=0.025, help_text="Sulfur % (S) - max")
-    chromium = models.FloatField(null=True, blank=True, default=0.0, help_text="Chromium % (Cr)")
-    nickel = models.FloatField(null=True, blank=True, default=0.0, help_text="Nickel % (Ni)")
+    carbon = models.FloatField(validators=[validate_percentage], help_text="Carbon % (C)")
+    manganese = models.FloatField(validators=[validate_percentage], help_text="Manganese % (Mn)")
+    silicon = models.FloatField(validators=[validate_percentage], help_text="Silicon % (Si)")
+    phosphorus = models.FloatField(null=True, blank=True, default=0.025, validators=[validate_percentage], help_text="Phosphorus % (P) - max")
+    sulfur = models.FloatField(null=True, blank=True, default=0.025, validators=[validate_percentage], help_text="Sulfur % (S) - max")
+    chromium = models.FloatField(null=True, blank=True, default=0.0, validators=[validate_percentage], help_text="Chromium % (Cr)")
+    nickel = models.FloatField(null=True, blank=True, default=0.0, validators=[validate_percentage], help_text="Nickel % (Ni)")
     
     is_composition_ok = models.BooleanField(
         null=True, blank=True, help_text="True if chemistry conforms to standard specification"
@@ -73,10 +141,10 @@ class MechanicalProperties(models.Model):
     batch = models.OneToOneField(
         MaterialBatch, on_delete=models.CASCADE, related_name='mechanical_properties'
     )
-    tensile_strength = models.FloatField(help_text="Ultimate Tensile Strength (UTS) in MPa")
-    yield_strength = models.FloatField(help_text="Yield Strength (YS) in MPa")
-    elongation = models.FloatField(help_text="Elongation % (A)")
-    hardness = models.FloatField(help_text="Hardness value (e.g. HRC or HBW)")
+    tensile_strength = models.FloatField(validators=[validate_positive_finite], help_text="Ultimate Tensile Strength (UTS) in MPa")
+    yield_strength = models.FloatField(validators=[validate_positive_finite], help_text="Yield Strength (YS) in MPa")
+    elongation = models.FloatField(validators=[validate_positive_finite], help_text="Elongation % (A)")
+    hardness = models.FloatField(validators=[validate_positive_finite], help_text="Hardness value (e.g. HRC or HBW)")
     hardness_scale = models.CharField(max_length=10, default='HRC', choices=[('HRC', 'HRC'), ('HBW', 'HBW'), ('HV', 'HV')])
 
     is_properties_ok = models.BooleanField(

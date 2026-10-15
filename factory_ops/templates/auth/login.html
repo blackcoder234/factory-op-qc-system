@@ -148,26 +148,12 @@
         </form>
 
         <!-- Enterprise Notice (No Public Registration) -->
-        <div style="margin-top: 1.5rem; padding: 0.75rem; border-radius: 0.5rem; background: rgba(3, 7, 18, 0.5); border: 1px solid rgba(51, 65, 85, 0.5); font-size: 0.6875rem; color: #94a3b8; display: flex; align-items: flex-start; gap: 0.625rem; line-height: 1.45;">
-          <svg style="width: 16px; height: 16px; color: #f59e0b; flex-shrink: 0; margin-top: 2px;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        <div style="margin-top: 1.5rem; padding: 0.875rem; border-radius: 0.5rem; background: rgba(3, 7, 18, 0.6); border: 1px solid rgba(51, 65, 85, 0.6); font-size: 0.6875rem; color: #94a3b8; display: flex; align-items: flex-start; gap: 0.625rem; line-height: 1.45;">
+          <svg style="width: 16px; height: 16px; color: #06b6d4; flex-shrink: 0; margin-top: 2px;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
           </svg>
           <div>
-            <strong style="color: #cbd5e1;">Internal Policy:</strong> Public registration is disabled. Terminal user accounts are pre-provisioned by Plant IT & Quality Assurance according to ISO 9001 audit standards.
-          </div>
-        </div>
-
-        <!-- Discreet Demo / Evaluator Helper -->
-        <div class="demo-access-box" style="margin-top: 1rem;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.375rem;">
-            <span style="font-size: 0.625rem; font-family: var(--font-mono); font-weight: 700; color: #22d3ee; text-transform: uppercase; letter-spacing: 0.05em;">Evaluation Demo Access</span>
-            <button type="button" onclick="autofillDemo()" style="font-size: 0.625rem; font-weight: 700; color: #67e8f9; background: none; border: none; text-decoration: underline; cursor: pointer; padding: 0;">
-              Autofill Credentials
-            </button>
-          </div>
-          <div style="font-family: var(--font-mono); font-size: 0.6875rem; color: #cbd5e1; display: flex; justify-content: space-between; align-items: center;">
-            <span>User: <strong style="color: #ffffff;">supervisor</strong></span>
-            <span>Password: <strong style="color: #ffffff;">ApexQC#2026</strong></span>
+            <strong style="color: #cbd5e1;">Enterprise Access Control:</strong> Public self-registration is disabled. Operational user accounts and role permissions (Plant Manager, Quality Engineer, Quality Manager, Shift Supervisor, QA Floor Inspector) are provisioned through secure administration in compliance with ISO 9001 standards.
           </div>
         </div>
 
@@ -180,13 +166,6 @@
 
     </div>
   </main>
-
-  <script>
-    function autofillDemo() {
-      document.getElementById('id_username').value = 'supervisor';
-      document.getElementById('id_password').value = 'ApexQC#2026';
-    }
-  </script>
 
 </body>
 </html>

@@ -8,17 +8,40 @@ import sys
 from pathlib import Path
 from dotenv import load_dotenv
 
-# Load environment variables from .env
-load_dotenv()
-
+# Load environment variables from .env located at BASE_DIR or current directory
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Security & Environment
-SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-p^867+249+p7=nxj)h%a*x6q51s-(%t$++2$t%2@xr2sy!hulr')
+env_file = BASE_DIR / '.env'
+if env_file.exists():
+    load_dotenv(env_file)
+else:
+    load_dotenv()
 
-DEBUG = os.environ.get('DJANGO_DEBUG', 'True').lower() == 'true'
+# Security & Environment Configuration
+# Secret key: Read from environment; require in production, provide safe dynamic ephemeral key in dev
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY') or os.environ.get('SECRET_KEY')
 
-ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '*').split(', ')
+DEBUG = (os.environ.get('DJANGO_DEBUG') or os.environ.get('DEBUG', 'False')).strip().lower() in ('true', '1', 'yes')
+
+if not SECRET_KEY:
+    if DEBUG:
+        import secrets
+        SECRET_KEY = secrets.token_urlsafe(50)
+    else:
+        from django.core.exceptions import ImproperlyConfigured
+        raise ImproperlyConfigured(
+            "CRITICAL: SECRET_KEY environment variable is missing in production mode. "
+            "Please set DJANGO_SECRET_KEY or SECRET_KEY in your environment or .env file."
+        )
+
+# Allowed Hosts: Parse comma-separated host list safely
+raw_hosts = os.environ.get('DJANGO_ALLOWED_HOSTS') or os.environ.get('ALLOWED_HOSTS', '')
+if raw_hosts:
+    ALLOWED_HOSTS = [h.strip() for h in raw_hosts.split(',') if h.strip()]
+elif DEBUG:
+    ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'testserver']
+else:
+    ALLOWED_HOSTS = []
 
 # Application definition
 INSTALLED_APPS = [
@@ -59,6 +82,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'master_setup.context_processors.rbac_context',
             ],
         },
     },

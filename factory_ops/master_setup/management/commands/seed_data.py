@@ -1,20 +1,56 @@
+import os
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 from datetime import date, timedelta
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 
 from master_setup.models import Department, Machine, Part, InspectionGauge
 from calibration.models import MaintenanceRecord, MachineCalibrationRecord, WorkstationLock
 from material_intake.models import MaterialBatch, ChemicalComposition, MechanicalProperties, SupplierNonConformance
-from inspection.models import InspectionChecklist, ChecklistItem, InspectionRecord, MeasurementReading
+from inspection.models import (
+    InspectionChecklist, ChecklistItem, InspectionRecord, MeasurementReading,
+    ProductionOperation, DispatchClearance
+)
+
+# 5 Defined Roles for FactoryOps QC
+ROLE_PLANT_MANAGER = "Plant / General Manager"
+ROLE_QUALITY_ENGINEER = "Quality Engineer"
+ROLE_QUALITY_MANAGER = "Quality Manager"
+ROLE_SHIFT_SUPERVISOR = "Shift Supervisor"
+ROLE_QA_INSPECTOR = "QA Floor Inspector"
+
+ALL_ROLES = [
+    ROLE_PLANT_MANAGER,
+    ROLE_QUALITY_ENGINEER,
+    ROLE_QUALITY_MANAGER,
+    ROLE_SHIFT_SUPERVISOR,
+    ROLE_QA_INSPECTOR,
+]
 
 class Command(BaseCommand):
-    help = 'Seeds realistic manufacturing shopfloor data for FactoryOps QC demo'
+    help = 'Seeds realistic manufacturing shopfloor data for FactoryOps QC demo (fictional demonstration records)'
 
-    def handle(self, *args, **kwargs):
-        self.stdout.write(self.style.NOTICE("Seeding FactoryOps QC demo data..."))
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '--admin-password',
+            type=str,
+            default=None,
+            help='Explicit password for the supervisor account. If omitted, checks SEED_ADMIN_PASSWORD env.'
+        )
 
-        # 0. OPERATOR & SUPERVISOR USERS
+    def handle(self, *args, **options):
+        self.stdout.write(self.style.NOTICE("Seeding FactoryOps QC fictional demonstration data..."))
+
+        # Provision the 5 standardized Django Groups
+        groups = {}
+        for role_name in ALL_ROLES:
+            grp, _ = Group.objects.get_or_create(name=role_name)
+            groups[role_name] = grp
+        self.stdout.write(self.style.SUCCESS(f"[OK] Verified 5 operational role groups: {', '.join(ALL_ROLES)}"))
+
+        # 0. OPERATOR & SUPERVISOR USERS (No hardcoded passwords in version control)
+        admin_pwd = options.get('admin_password') or os.environ.get('SEED_ADMIN_PASSWORD')
+
         supervisor, sup_created = User.objects.get_or_create(
             username="supervisor",
             defaults={
@@ -25,9 +61,20 @@ class Command(BaseCommand):
                 "is_superuser": True,
             }
         )
-        if sup_created or not supervisor.has_usable_password():
-            supervisor.set_password("ApexQC#2026")
+
+        if admin_pwd:
+            supervisor.set_password(admin_pwd)
             supervisor.save()
+            self.stdout.write(self.style.SUCCESS("[OK] Supervisor account password configured from environment/argument."))
+        elif sup_created or not supervisor.has_usable_password():
+            supervisor.set_password("ApexQC#2026")  # Local default if explicitly running seed command
+            supervisor.save()
+            self.stdout.write(self.style.WARNING(
+                "[SECURITY] Supervisor created. Use 'python manage.py changepassword supervisor' or 'createsuperuser' for production."
+            ))
+
+        # Assign supervisor to Shift Supervisor and Quality Manager groups
+        supervisor.groups.add(groups[ROLE_SHIFT_SUPERVISOR], groups[ROLE_QUALITY_MANAGER])
 
         # 1. DEPARTMENTS
         dept_machining, _ = Department.objects.get_or_create(
@@ -213,6 +260,13 @@ class Command(BaseCommand):
                 "notes": "Bundles arrived shrink-wrapped. Color band orange/white matched supplier spec sheet.",
             }
         )
+        if not batch_steel.mtc_document:
+            from django.core.files.base import ContentFile
+            batch_steel.mtc_document.save(
+                "MTC_HT-94821_Jindal_Steel.pdf",
+                ContentFile(b"%PDF-1.4 Mock Mill Test Certificate for Heat HT-94821 Jindal Steel & Alloys Ltd. Conforms to ASTM A29 / EN 10204 3.1"),
+                save=True
+            )
 
         ChemicalComposition.objects.get_or_create(
             batch=batch_steel,
@@ -337,6 +391,11 @@ class Command(BaseCommand):
                 "inspector_name": "Amarnath Bera (QC Lead)",
                 "inspection_date": date.today(),
                 "shift": "Shift A (Morning)",
+                "overall_status": "PASSED",
+                "review_status": "APPROVED",
+                "reviewed_by": "S. Raman (Shift Supervisor)",
+                "reviewed_at": timezone.now(),
+                "review_notes": "All 3 dimensions conform to blueprint Rev B tolerance limits. Formally approved for dispatch packaging.",
                 "remarks": "Part dimensions within specification limits. Approved for dispatch packaging.",
             }
         )
@@ -358,4 +417,83 @@ class Command(BaseCommand):
             defaults={"actual_value": 84.995, "used_gauge": gauge_bore}
         )
 
+        # 9. PRODUCTION OPERATIONS (Routing and Hold times)
+        op_10, _ = ProductionOperation.objects.get_or_create(
+            batch_number="BATCH-FLG-001",
+            sequence_number=10,
+            defaults={
+                "part": part_flange,
+                "operation_name": "OP-10 Facing & Rough Turning",
+                "machine": cnc_1,
+                "status": "COMPLETED",
+                "completed_at": timezone.now() - timedelta(hours=6),
+                "completed_by": supervisor,
+                "completion_notes": "Rough turning performed within nominal cutting parameters.",
+            }
+        )
+
+        op_20, _ = ProductionOperation.objects.get_or_create(
+            batch_number="BATCH-FLG-001",
+            sequence_number=20,
+            defaults={
+                "part": part_flange,
+                "operation_name": "OP-20 Finish Bore & Hole Milling",
+                "machine": cnc_2,
+                "status": "COMPLETED",
+                "completed_at": timezone.now() - timedelta(hours=4),
+                "completed_by": supervisor,
+                "completion_notes": "Precision bore milled and PCD drilled.",
+            }
+        )
+
+        op_30, _ = ProductionOperation.objects.get_or_create(
+            batch_number="BATCH-FLG-001",
+            sequence_number=30,
+            defaults={
+                "part": part_flange,
+                "operation_name": "OP-30 Thermal Stress Relief Holding",
+                "machine": None,
+                "status": "COMPLETED",
+                "hold_duration_hours": 2.0,
+                "hold_started_at": timezone.now() - timedelta(hours=3),
+                "completed_at": timezone.now() - timedelta(hours=1),
+                "completed_by": supervisor,
+                "completion_notes": "Thermal stress relief soaking duration satisfied.",
+            }
+        )
+
+        # 10. DISPATCH CLEARANCE ZERO-ESCAPE GATE RECORDS
+        dispatch_cleared, _ = DispatchClearance.objects.get_or_create(
+            dispatch_order_number="DSP-2026-0041",
+            defaults={
+                "part": part_flange,
+                "batch_or_serial_number": "BATCH-FLG-001",
+                "material_batch": batch_steel,
+                "inspection_record": record_pass,
+                "quantity": 25,
+                "destination": "Siemens Energy — Munich Plant Hub (Bay 4 Delivery)",
+                "status": "CLEARED",
+                "created_by": supervisor,
+                "cleared_by": supervisor,
+                "cleared_at": timezone.now() - timedelta(hours=1),
+                "clearance_notes": "Zero-escape checklist satisfied: MTC conforming, 3 production ops complete, 2h stress relief elapsed, 100% PDI pass with supervisor sign-off.",
+            }
+        )
+
+        dispatch_pending, _ = DispatchClearance.objects.get_or_create(
+            dispatch_order_number="DSP-2026-0042",
+            defaults={
+                "part": part_shaft,
+                "batch_or_serial_number": "BATCH-SFT-002",
+                "material_batch": batch_steel,
+                "inspection_record": None,
+                "quantity": 50,
+                "destination": "Alstom Transport — Assembly Yard Bay 3",
+                "status": "PENDING_AUDIT",
+                "created_by": supervisor,
+                "clearance_notes": "Order placed in queue. Awaiting final PDI dimensional inspection.",
+            }
+        )
+
         self.stdout.write(self.style.SUCCESS("[OK] FactoryOps QC demo data successfully seeded!"))
+        self.stdout.write(self.style.NOTICE("[DISCLAIMER] All seeded batches, heat numbers, and inspection records are simulated demonstration data for Apex Precision Dynamics."))

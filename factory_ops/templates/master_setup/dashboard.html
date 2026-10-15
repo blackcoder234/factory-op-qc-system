@@ -33,6 +33,11 @@
         <span class="w-2 h-2 rounded-full bg-rose-400 {% if locked_count > 0 %}animate-pulse{% endif %}"></span>
         <span>Machine Lock ({{ locked_count }})</span>
       </a>
+      <a href="{% url 'inspection:dispatch_list' %}" 
+         class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-lg bg-teal-500/10 hover:bg-teal-500/20 text-teal-300 border border-teal-500/30 transition shadow-sm">
+        <span class="w-2 h-2 rounded-full bg-teal-400 {% if pending_dispatches > 0 %}animate-pulse{% endif %}"></span>
+        <span>Dispatch Gate ({{ pending_dispatches }} Pending)</span>
+      </a>
       <a href="{% url 'inspection:record_list' %}" 
          class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-md shadow-emerald-500/20 transition">
         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -195,124 +200,202 @@
   </div>
   {% endif %}
 
-  <!-- Factory Operations Navigation Grid with Direct Sub-links -->
-  <div>
-    <div class="flex items-center justify-between mb-4">
-      <h2 class="text-lg font-bold text-white tracking-tight flex items-center gap-2">
-        <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
-        <span>Factory Operations</span>
-      </h2>
-      <span class="text-xs text-slate-500 font-mono">PLANT APX-09 MODULES</span>
+  <!-- Factory Operations Module Hub -->
+  <div class="space-y-4">
+    <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 pb-3 border-b border-white/[0.08]">
+      <div>
+        <div class="flex items-center gap-2 font-mono text-[11px] font-bold text-cyan-400 uppercase tracking-widest mb-1">
+          <span class="w-2 h-2 rounded-full bg-cyan-400 shadow-sm shadow-cyan-400"></span>
+          <span>PLANT APX-09 // OPERATIONAL WORKSPACES</span>
+        </div>
+        <h2 class="text-xl sm:text-2xl font-black text-white tracking-tight">Factory Operations</h2>
+        <p class="text-xs text-slate-300 font-medium mt-0.5">Direct console access to shopfloor machinery, safety interlocks, material receiving, and inspection checkpoints.</p>
+      </div>
+      <div class="flex items-center gap-2 font-mono text-xs">
+        <span class="px-2.5 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/25 text-emerald-300 font-bold flex items-center gap-1.5 shadow-sm">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> ALL 4 MODULES ONLINE
+        </span>
+      </div>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
       
       <!-- Card 1: Factory Setup -->
-      <div class="group p-5 rounded-2xl bg-slate-900/50 hover:bg-slate-900/80 border border-slate-800 hover:border-cyan-500/40 transition flex flex-col justify-between shadow-sm">
+      <div class="rounded-2xl bg-slate-900/80 hover:bg-slate-900 border border-slate-800 hover:border-cyan-500/50 border-t-2 border-t-cyan-400 p-5 flex flex-col justify-between transition-all duration-200 group shadow-lg">
         <div>
-          <div class="w-10 h-10 rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 flex items-center justify-center mb-4 group-hover:scale-105 transition">
-            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
-            </svg>
+          <!-- Module Tag & Live Count -->
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-mono font-black uppercase tracking-wider text-cyan-400">01 // SETUP &amp; ASSETS</span>
+            <span class="px-2.5 py-1 rounded-md text-xs font-mono font-bold bg-cyan-500/10 text-cyan-300 border border-cyan-500/30">{{ total_machines }} Machines</span>
           </div>
-          <span class="text-[10px] font-bold text-cyan-400 tracking-wider uppercase font-mono">Factory Setup</span>
-          <h3 class="text-base font-bold text-white mt-1 group-hover:text-cyan-300 transition">Factory Setup &amp; Infrastructure</h3>
-          <p class="text-xs text-slate-400 mt-2 leading-relaxed">Plant departments, CNC workstations, manufactured part catalog, and tool crib registry.</p>
+
+          <h3 class="text-lg font-black text-white tracking-tight group-hover:text-cyan-300 transition-colors">
+            Factory Setup &amp; Infrastructure
+          </h3>
+          <p class="text-xs text-slate-300 font-medium mt-1.5 leading-snug">
+            Shopfloor workstations, CAD part blueprints, and calibrated tool crib gauges.
+          </p>
           
-          <!-- Direct Working Sub-links -->
-          <div class="mt-4 flex flex-wrap gap-1.5 font-mono text-[11px]">
-            <a href="{% url 'master_setup:department_list' %}" class="px-2 py-0.5 rounded bg-slate-800/80 hover:bg-cyan-950 hover:text-cyan-300 text-slate-300 border border-slate-700/60 transition">Departments</a>
-            <a href="{% url 'master_setup:machine_list' %}" class="px-2 py-0.5 rounded bg-slate-800/80 hover:bg-cyan-950 hover:text-cyan-300 text-slate-300 border border-slate-700/60 transition">Machines</a>
-            <a href="{% url 'master_setup:part_list' %}" class="px-2 py-0.5 rounded bg-slate-800/80 hover:bg-cyan-950 hover:text-cyan-300 text-slate-300 border border-slate-700/60 transition">Parts</a>
-            <a href="{% url 'master_setup:gauge_list' %}" class="px-2 py-0.5 rounded bg-slate-800/80 hover:bg-cyan-950 hover:text-cyan-300 text-slate-300 border border-slate-700/60 transition">Gauges</a>
+          <!-- Structured Quick Actions Grid -->
+          <div class="mt-4 grid grid-cols-2 gap-2 text-xs">
+            <a href="{% url 'master_setup:department_list' %}" class="flex items-center justify-between p-2.5 rounded-lg bg-slate-800/80 hover:bg-slate-700/90 border border-slate-700 hover:border-cyan-400/50 text-white transition group/link shadow-sm">
+              <span class="font-bold text-xs">Departments</span>
+              <span class="text-[10px] font-mono text-cyan-400 bg-cyan-950/70 px-1.5 py-0.5 rounded border border-cyan-800 font-bold">{{ total_departments }}</span>
+            </a>
+            <a href="{% url 'master_setup:machine_list' %}" class="flex items-center justify-between p-2.5 rounded-lg bg-slate-800/80 hover:bg-slate-700/90 border border-slate-700 hover:border-cyan-400/50 text-white transition group/link shadow-sm">
+              <span class="font-bold text-xs">Machines</span>
+              <span class="text-[10px] font-mono text-cyan-400 bg-cyan-950/70 px-1.5 py-0.5 rounded border border-cyan-800 font-bold">{{ total_machines }}</span>
+            </a>
+            <a href="{% url 'master_setup:part_list' %}" class="flex items-center justify-between p-2.5 rounded-lg bg-slate-800/80 hover:bg-slate-700/90 border border-slate-700 hover:border-cyan-400/50 text-white transition group/link shadow-sm">
+              <span class="font-bold text-xs">Part Catalog</span>
+              <span class="text-[10px] font-mono text-cyan-400 bg-cyan-950/70 px-1.5 py-0.5 rounded border border-cyan-800 font-bold">{{ total_parts }}</span>
+            </a>
+            <a href="{% url 'master_setup:gauge_list' %}" class="flex items-center justify-between p-2.5 rounded-lg bg-slate-800/80 hover:bg-slate-700/90 border border-slate-700 hover:border-cyan-400/50 text-white transition group/link shadow-sm">
+              <span class="font-bold text-xs">Tool Crib</span>
+              <span class="text-[10px] font-mono text-cyan-400 bg-cyan-950/70 px-1.5 py-0.5 rounded border border-cyan-800 font-bold">{{ total_gauges }}</span>
+            </a>
           </div>
         </div>
 
-        <div class="mt-5 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400 group-hover:text-cyan-400">
-          <a href="{% url 'master_setup:department_list' %}" class="flex items-center justify-between w-full font-semibold">
-            <span>Manage Setup</span>
-            <span>→</span>
+        <div class="mt-5 pt-3 border-t border-slate-800">
+          <a href="{% url 'master_setup:department_list' %}" class="w-full py-2.5 px-3 rounded-lg bg-slate-800 hover:bg-cyan-500 hover:text-slate-950 text-slate-100 font-bold text-xs flex items-center justify-between border border-slate-700 hover:border-cyan-400 transition-all shadow-sm">
+            <span>Open Setup Console</span>
+            <span class="font-black">→</span>
           </a>
         </div>
       </div>
 
       <!-- Card 2: Equipment & Calibration -->
-      <div class="group p-5 rounded-2xl bg-slate-900/50 hover:bg-slate-900/80 border border-slate-800 hover:border-rose-500/40 transition flex flex-col justify-between shadow-sm">
+      <div class="rounded-2xl bg-slate-900/80 hover:bg-slate-900 border border-slate-800 hover:border-rose-500/50 border-t-2 border-t-rose-400 p-5 flex flex-col justify-between transition-all duration-200 group shadow-lg">
         <div>
-          <div class="w-10 h-10 rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20 flex items-center justify-center mb-4 group-hover:scale-105 transition">
-            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-            </svg>
+          <!-- Module Tag & Live Count -->
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-mono font-black uppercase tracking-wider text-rose-400">02 // SAFETY INTERLOCKS</span>
+            <span class="px-2.5 py-1 rounded-md text-xs font-mono font-bold border {% if locked_count > 0 %}bg-rose-500/20 text-rose-300 border-rose-500/40 animate-pulse{% else %}bg-emerald-500/10 text-emerald-300 border-emerald-500/30{% endif %}">
+              {% if locked_count > 0 %}● {{ locked_count }} LOCKED{% else %}● ALL NOMINAL{% endif %}
+            </span>
           </div>
-          <span class="text-[10px] font-bold text-rose-400 tracking-wider uppercase font-mono">Safety Interlocks</span>
-          <h3 class="text-base font-bold text-white mt-1 group-hover:text-rose-300 transition">Equipment &amp; Calibration</h3>
-          <p class="text-xs text-slate-400 mt-2 leading-relaxed">Machine maintenance status, shift verification checks, and calibration lockout controls.</p>
+
+          <h3 class="text-lg font-black text-white tracking-tight group-hover:text-rose-300 transition-colors">
+            Equipment &amp; Calibration
+          </h3>
+          <p class="text-xs text-slate-300 font-medium mt-1.5 leading-snug">
+            Workstation lockout controls, PM verification checks, and calibration lock status.
+          </p>
           
-          <!-- Direct Working Sub-links -->
-          <div class="mt-4 flex flex-wrap gap-1.5 font-mono text-[11px]">
-            <a href="{% url 'calibration:machine_lock_list' %}" class="px-2 py-0.5 rounded bg-slate-800/80 hover:bg-rose-950 hover:text-rose-300 text-slate-300 border border-slate-700/60 transition">Lockout Registry</a>
-            <a href="{% url 'calibration:maintenance_log' %}" class="px-2 py-0.5 rounded bg-slate-800/80 hover:bg-rose-950 hover:text-rose-300 text-slate-300 border border-slate-700/60 transition">Maintenance Logs</a>
+          <!-- Structured Quick Actions List -->
+          <div class="mt-4 space-y-2 text-xs">
+            <a href="{% url 'calibration:machine_lock_list' %}" class="flex items-center justify-between p-2.5 rounded-lg bg-slate-800/80 hover:bg-slate-700/90 border border-slate-700 hover:border-rose-400/50 text-white transition group/link shadow-sm">
+              <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                <span class="font-bold text-xs">Workstation Lockouts</span>
+              </div>
+              {% if locked_count > 0 %}
+                <span class="text-[10px] font-mono text-rose-300 bg-rose-950/80 px-2 py-0.5 rounded border border-rose-700 font-black animate-pulse">{{ locked_count }} Locked</span>
+              {% else %}
+                <span class="text-[10px] font-mono text-emerald-300 bg-emerald-950/70 px-2 py-0.5 rounded border border-emerald-800 font-bold">0 Active</span>
+              {% endif %}
+            </a>
+            <a href="{% url 'calibration:maintenance_log' %}" class="flex items-center justify-between p-2.5 rounded-lg bg-slate-800/80 hover:bg-slate-700/90 border border-slate-700 hover:border-rose-400/50 text-white transition group/link shadow-sm">
+              <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                <span class="font-bold text-xs">Maintenance Records</span>
+              </div>
+              <span class="text-[10px] font-mono text-slate-300 bg-slate-900 px-2 py-0.5 rounded border border-slate-700 font-bold">Shift PM</span>
+            </a>
           </div>
         </div>
 
-        <div class="mt-5 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400 group-hover:text-rose-400">
-          <a href="{% url 'calibration:machine_lock_list' %}" class="flex items-center justify-between w-full font-semibold">
-            <span>Equipment Status</span>
-            <span>→</span>
+        <div class="mt-5 pt-3 border-t border-slate-800">
+          <a href="{% url 'calibration:machine_lock_list' %}" class="w-full py-2.5 px-3 rounded-lg bg-slate-800 hover:bg-rose-500 hover:text-white text-slate-100 font-bold text-xs flex items-center justify-between border border-slate-700 hover:border-rose-400 transition-all shadow-sm">
+            <span>View Equipment Status</span>
+            <span class="font-black">→</span>
           </a>
         </div>
       </div>
 
       <!-- Card 3: Materials & Receiving -->
-      <div class="group p-5 rounded-2xl bg-slate-900/50 hover:bg-slate-900/80 border border-slate-800 hover:border-emerald-500/40 transition flex flex-col justify-between shadow-sm">
+      <div class="rounded-2xl bg-slate-900/80 hover:bg-slate-900 border border-slate-800 hover:border-emerald-500/50 border-t-2 border-t-emerald-400 p-5 flex flex-col justify-between transition-all duration-200 group shadow-lg">
         <div>
-          <div class="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center mb-4 group-hover:scale-105 transition">
-            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
-            </svg>
+          <!-- Module Tag & Live Count -->
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-mono font-black uppercase tracking-wider text-emerald-400">03 // RECEIVING DOCK</span>
+            <span class="px-2.5 py-1 rounded-md text-xs font-mono font-bold bg-emerald-500/10 text-emerald-300 border border-emerald-500/30">{{ total_batches }} Heat Batches</span>
           </div>
-          <span class="text-[10px] font-bold text-emerald-400 tracking-wider uppercase font-mono">Receiving Dock</span>
-          <h3 class="text-base font-bold text-white mt-1 group-hover:text-emerald-300 transition">Materials &amp; Receiving</h3>
-          <p class="text-xs text-slate-400 mt-2 leading-relaxed">Inward heat number logging, Mill Test Certificate (MTC) chemistry verification, and SNCR quarantine.</p>
+
+          <h3 class="text-lg font-black text-white tracking-tight group-hover:text-emerald-300 transition-colors">
+            Materials &amp; Receiving
+          </h3>
+          <p class="text-xs text-slate-300 font-medium mt-1.5 leading-snug">
+            Raw material intake, Mill Test Certificate chemistry checks, and SNCR quarantine.
+          </p>
           
-          <!-- Direct Working Sub-links -->
-          <div class="mt-4 flex flex-wrap gap-1.5 font-mono text-[11px]">
-            <a href="{% url 'material_intake:batch_list' %}" class="px-2 py-0.5 rounded bg-slate-800/80 hover:bg-emerald-950 hover:text-emerald-300 text-slate-300 border border-slate-700/60 transition">Inward Batches</a>
-            <a href="{% url 'material_intake:batch_list' %}" class="px-2 py-0.5 rounded bg-slate-800/80 hover:bg-emerald-950 hover:text-emerald-300 text-slate-300 border border-slate-700/60 transition">MTC Logs</a>
+          <!-- Structured Quick Actions List -->
+          <div class="mt-4 space-y-2 text-xs">
+            <a href="{% url 'material_intake:batch_list' %}" class="flex items-center justify-between p-2.5 rounded-lg bg-slate-800/80 hover:bg-slate-700/90 border border-slate-700 hover:border-emerald-400/50 text-white transition group/link shadow-sm">
+              <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                <span class="font-bold text-xs">Inward Batch Registry</span>
+              </div>
+              <span class="text-[10px] font-mono text-emerald-300 bg-emerald-950/80 px-2 py-0.5 rounded border border-emerald-700 font-black">{{ accepted_batches }} Accepted</span>
+            </a>
+            <a href="{% url 'material_intake:batch_list' %}" class="flex items-center justify-between p-2.5 rounded-lg bg-slate-800/80 hover:bg-slate-700/90 border border-slate-700 hover:border-emerald-400/50 text-white transition group/link shadow-sm">
+              <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                <span class="font-bold text-xs">MTC Chemical Logs</span>
+              </div>
+              <span class="text-[10px] font-mono text-cyan-300 bg-cyan-950/80 px-2 py-0.5 rounded border border-cyan-700 font-bold">Spectral MTC</span>
+            </a>
           </div>
         </div>
 
-        <div class="mt-5 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400 group-hover:text-emerald-400">
-          <a href="{% url 'material_intake:batch_list' %}" class="flex items-center justify-between w-full font-semibold">
-            <span>Receiving &amp; MTCs</span>
-            <span>→</span>
+        <div class="mt-5 pt-3 border-t border-slate-800">
+          <a href="{% url 'material_intake:batch_list' %}" class="w-full py-2.5 px-3 rounded-lg bg-slate-800 hover:bg-emerald-500 hover:text-slate-950 text-slate-100 font-bold text-xs flex items-center justify-between border border-slate-700 hover:border-emerald-400 transition-all shadow-sm">
+            <span>Manage Receiving Dock</span>
+            <span class="font-black">→</span>
           </a>
         </div>
       </div>
 
       <!-- Card 4: Quality Inspections -->
-      <div class="group p-5 rounded-2xl bg-slate-900/50 hover:bg-slate-900/80 border border-slate-800 hover:border-teal-500/40 transition flex flex-col justify-between shadow-sm">
+      <div class="rounded-2xl bg-slate-900/80 hover:bg-slate-900 border border-slate-800 hover:border-teal-500/50 border-t-2 border-t-teal-400 p-5 flex flex-col justify-between transition-all duration-200 group shadow-lg">
         <div>
-          <div class="w-10 h-10 rounded-xl bg-teal-500/10 text-teal-400 border border-teal-500/20 flex items-center justify-center mb-4 group-hover:scale-105 transition">
-            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
-            </svg>
+          <!-- Module Tag & Live Count -->
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-mono font-black uppercase tracking-wider text-teal-400">04 // QUALITY CONTROL</span>
+            <span class="px-2.5 py-1 rounded-md text-xs font-mono font-bold bg-teal-500/10 text-teal-300 border border-teal-500/30">{{ pass_rate }}% Pass Yield</span>
           </div>
-          <span class="text-[10px] font-bold text-teal-400 tracking-wider uppercase font-mono">Quality Assurance</span>
-          <h3 class="text-base font-bold text-white mt-1 group-hover:text-teal-300 transition">Quality Inspections</h3>
-          <p class="text-xs text-slate-400 mt-2 leading-relaxed">Inspection plans with blueprint tolerances, dimension measurements, and automated Pass/Fail calculation.</p>
+
+          <h3 class="text-lg font-black text-white tracking-tight group-hover:text-teal-300 transition-colors">
+            Quality Inspections
+          </h3>
+          <p class="text-xs text-slate-300 font-medium mt-1.5 leading-snug">
+            Pre-dispatch inspection plans, tolerance measurements, and automated Pass/Fail calculation.
+          </p>
           
-          <!-- Direct Working Sub-links -->
-          <div class="mt-4 flex flex-wrap gap-1.5 font-mono text-[11px]">
-            <a href="{% url 'inspection:checklist_list' %}" class="px-2 py-0.5 rounded bg-slate-800/80 hover:bg-teal-950 hover:text-teal-300 text-slate-300 border border-slate-700/60 transition">Checklists</a>
-            <a href="{% url 'inspection:record_list' %}" class="px-2 py-0.5 rounded bg-slate-800/80 hover:bg-teal-950 hover:text-teal-300 text-slate-300 border border-slate-700/60 transition">Inspection Records</a>
+          <!-- Structured Quick Actions List -->
+          <div class="mt-4 space-y-2 text-xs">
+            <a href="{% url 'inspection:checklist_list' %}" class="flex items-center justify-between p-2.5 rounded-lg bg-slate-800/80 hover:bg-slate-700/90 border border-slate-700 hover:border-teal-400/50 text-white transition group/link shadow-sm">
+              <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+                <span class="font-bold text-xs">Inspection Checklists</span>
+              </div>
+              <span class="text-[10px] font-mono text-teal-300 bg-teal-950/80 px-2 py-0.5 rounded border border-teal-700 font-black">{{ total_checklists }} Plans</span>
+            </a>
+            <a href="{% url 'inspection:record_list' %}" class="flex items-center justify-between p-2.5 rounded-lg bg-slate-800/80 hover:bg-slate-700/90 border border-slate-700 hover:border-teal-400/50 text-white transition group/link shadow-sm">
+              <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                <span class="font-bold text-xs">Inspection Records</span>
+              </div>
+              <span class="text-[10px] font-mono text-emerald-300 bg-emerald-950/80 px-2 py-0.5 rounded border border-emerald-700 font-black">{{ total_inspections }} Logged</span>
+            </a>
           </div>
         </div>
 
-        <div class="mt-5 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400 group-hover:text-teal-400">
-          <a href="{% url 'inspection:checklist_list' %}" class="flex items-center justify-between w-full font-semibold">
-            <span>Quality Plans &amp; Records</span>
-            <span>→</span>
+        <div class="mt-5 pt-3 border-t border-slate-800">
+          <a href="{% url 'inspection:record_list' %}" class="w-full py-2.5 px-3 rounded-lg bg-slate-800 hover:bg-teal-500 hover:text-slate-950 text-slate-100 font-bold text-xs flex items-center justify-between border border-slate-700 hover:border-teal-400 transition-all shadow-sm">
+            <span>Open Inspection Records</span>
+            <span class="font-black">→</span>
           </a>
         </div>
       </div>
@@ -321,67 +404,82 @@
   </div>
 
   <!-- Recent Inspection Sessions -->
-  <div class="rounded-2xl bg-slate-900/60 border border-white/[0.08] p-5 backdrop-blur-sm shadow-sm">
-    <div class="flex items-center justify-between mb-4">
+  <div class="rounded-2xl bg-slate-900/90 border border-slate-800 p-6 backdrop-blur-sm shadow-xl space-y-4">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-4 border-b border-white/[0.08]">
       <div>
-        <h3 class="text-sm font-bold text-white">Recent Shopfloor Quality Inspections</h3>
-        <p class="text-xs text-slate-400">Live records from Pre-Dispatch and In-Process checkpoints</p>
+        <div class="flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+          <h3 class="text-base sm:text-lg font-black text-white tracking-tight">Recent Shopfloor Quality Inspections</h3>
+          <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-cyan-500/10 text-cyan-300 border border-cyan-500/20">LIVE AUDIT TRAIL</span>
+        </div>
+        <p class="text-xs text-slate-300 font-medium mt-1">Live inspection telemetry recorded from Pre-Dispatch and In-Process checkpoints</p>
       </div>
-      <a href="{% url 'inspection:record_list' %}" class="text-xs font-semibold text-emerald-400 hover:text-emerald-300 transition">
-        View All Records →
+      <a href="{% url 'inspection:record_list' %}" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500 hover:text-slate-950 text-emerald-300 font-bold text-xs border border-emerald-500/30 transition shadow-sm self-start sm:self-auto">
+        <span>View All Records ({{ total_inspections }})</span>
+        <span class="font-black">→</span>
       </a>
     </div>
 
-    <div class="overflow-x-auto">
+    <div class="overflow-x-auto rounded-xl border border-slate-800">
       <table class="w-full text-left text-xs">
-        <thead class="text-slate-400 border-b border-slate-800 uppercase tracking-wider text-[10px] font-mono">
+        <thead class="bg-slate-950 text-slate-300 border-b border-slate-800 uppercase tracking-wider text-[11px] font-mono font-bold">
           <tr>
-            <th class="py-3 px-3">Session ID</th>
-            <th class="py-3 px-3">Part Component</th>
-            <th class="py-3 px-3">Batch / Serial #</th>
-            <th class="py-3 px-3">Inspector</th>
-            <th class="py-3 px-3">Date / Shift</th>
-            <th class="py-3 px-3">Overall Status</th>
-            <th class="py-3 px-3 text-right">Action</th>
+            <th class="py-3.5 px-4">Session ID</th>
+            <th class="py-3.5 px-4">Part Component</th>
+            <th class="py-3.5 px-4">Batch / Serial #</th>
+            <th class="py-3.5 px-4">Inspector</th>
+            <th class="py-3.5 px-4">Date / Shift</th>
+            <th class="py-3.5 px-4">Overall Status</th>
+            <th class="py-3.5 px-4 text-right">Action</th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-slate-800/60 text-slate-300">
+        <tbody class="divide-y divide-slate-800/80 text-slate-200 bg-slate-900/40">
           {% for r in recent_inspections %}
-          <tr class="hover:bg-slate-800/40 transition">
-            <td class="py-3 px-3 font-mono font-bold text-cyan-300">#{{ r.id }}</td>
-            <td class="py-3 px-3">
-              <div class="font-semibold text-white">{{ r.checklist.part.part_number }}</div>
-              <div class="text-[11px] text-slate-400">{{ r.checklist.name }}</div>
+          <tr class="hover:bg-slate-800/50 transition">
+            <td class="py-4 px-4 font-mono font-black text-cyan-300">
+              <span class="px-2.5 py-1 rounded bg-slate-950 text-cyan-300 font-mono font-black text-xs border border-slate-800">#{{ r.id }}</span>
             </td>
-            <td class="py-3 px-3 font-mono text-slate-300">{{ r.batch_or_serial_number }}</td>
-            <td class="py-3 px-3">{{ r.inspector_name }}</td>
-            <td class="py-3 px-3 text-slate-400 font-mono">{{ r.inspection_date|date:"d M Y" }} • {{ r.shift }}</td>
-            <td class="py-3 px-3">
+            <td class="py-4 px-4">
+              <div class="font-extrabold text-white text-sm tracking-tight">{{ r.checklist.part.part_number }}</div>
+              <div class="text-xs text-slate-400 font-medium mt-0.5">{{ r.checklist.name }}</div>
+            </td>
+            <td class="py-4 px-4">
+              <span class="font-mono text-xs font-bold text-slate-200 bg-slate-950 px-2.5 py-1 rounded border border-slate-800">{{ r.batch_or_serial_number }}</span>
+            </td>
+            <td class="py-4 px-4">
+              <div class="font-bold text-white text-xs">{{ r.inspector_name }}</div>
+              <div class="text-[10px] text-slate-400 font-mono font-semibold uppercase">QC Lead</div>
+            </td>
+            <td class="py-4 px-4">
+              <div class="text-xs text-slate-200 font-mono font-bold">{{ r.inspection_date|date:"d M Y" }}</div>
+              <div class="text-[11px] text-cyan-400 font-mono font-semibold">{{ r.shift }}</div>
+            </td>
+            <td class="py-4 px-4">
               {% if r.overall_status == 'PASSED' %}
-                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> PASSED
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm">
+                  <span class="w-2 h-2 rounded-full bg-emerald-400 shadow-sm shadow-emerald-400"></span> PASSED
                 </span>
               {% elif r.overall_status == 'FAILED' %}
-                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20">
-                  <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span> FAILED
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-rose-500/20 text-rose-300 border border-rose-500/40 shadow-sm">
+                  <span class="w-2 h-2 rounded-full bg-rose-400 shadow-sm shadow-rose-400 animate-pulse"></span> FAILED
                 </span>
               {% else %}
-                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/10 text-amber-300 border border-amber-500/20">
-                  <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span> IN PROGRESS
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm">
+                  <span class="w-2 h-2 rounded-full bg-amber-400"></span> IN PROGRESS
                 </span>
               {% endif %}
             </td>
-            <td class="py-3 px-3 text-right">
+            <td class="py-4 px-4 text-right">
               <a href="{% url 'inspection:record_detail' record_id=r.id %}" 
-                 class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white transition font-medium border border-slate-700/60 shadow-sm">
+                 class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-slate-800 hover:bg-cyan-500 hover:text-slate-950 text-slate-100 font-bold text-xs border border-slate-700 hover:border-cyan-400 transition shadow-sm">
                 <span>Enter Readings</span>
-                <span class="text-cyan-400">→</span>
+                <span class="font-black text-cyan-400 group-hover:text-slate-950">→</span>
               </a>
             </td>
           </tr>
           {% empty %}
           <tr>
-            <td colspan="7" class="py-8 text-center text-slate-500">No inspection records logged yet.</td>
+            <td colspan="7" class="py-12 text-center text-slate-400 font-medium">No inspection records logged yet on the shopfloor.</td>
           </tr>
           {% endfor %}
         </tbody>

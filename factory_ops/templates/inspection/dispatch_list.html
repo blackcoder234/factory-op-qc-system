@@ -1,0 +1,275 @@
+{% extends "base.html" %}
+
+{% block title %}Dispatch Clearance & Quality Release Gate — Apex Precision FactoryOps{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-800">
+    <div>
+      <div class="flex items-center gap-2 mb-1">
+        <span class="text-xs font-bold text-teal-400 font-mono uppercase tracking-wider">Quality Operations</span>
+        <span class="text-xs text-slate-500">/</span>
+        <span class="text-xs text-slate-400">Zero-Escape Shipping Clearance Gate</span>
+      </div>
+      <h1 class="text-2xl font-extrabold text-white tracking-tight">Finished Goods Dispatch Clearances</h1>
+      <p class="text-xs text-slate-400 mt-1">Multi-stage cross-module verification: Raw materials, production routing, process holds, and supervisor PDI approvals.</p>
+    </div>
+
+    <!-- Overall Summary Badges -->
+    <div class="flex items-center gap-2">
+      <span class="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-semibold flex items-center gap-1.5">
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+        {{ cleared_count }} Cleared &amp; Shipped
+      </span>
+      <span class="px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-300 border border-amber-500/20 text-xs font-semibold flex items-center gap-1.5">
+        <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+        {{ pending_count }} Pending Quality Gate
+      </span>
+      <span class="px-2.5 py-1 rounded-lg bg-rose-500/10 text-rose-400 border border-rose-500/20 text-xs font-semibold flex items-center gap-1.5">
+        <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span>
+        {{ rejected_count }} Quality Hold
+      </span>
+    </div>
+  </div>
+
+  <!-- Quality Module Navigation Sub-Tabs -->
+  <div class="flex items-center gap-2 pb-1 border-b border-slate-800/80 text-xs font-medium">
+    <a href="{% url 'inspection:checklist_list' %}" class="px-3 py-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/50 transition">
+      Checklist Templates
+    </a>
+    <a href="{% url 'inspection:record_list' %}" class="px-3 py-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/50 transition">
+      Inspection Records &amp; PDI
+    </a>
+    <a href="{% url 'inspection:dispatch_list' %}" class="px-3 py-1.5 rounded-lg bg-teal-500/10 text-teal-300 border border-teal-500/30 font-semibold shadow-sm">
+      Dispatch Clearances
+    </a>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <!-- Dispatch Orders Table (2 Cols) -->
+    <div class="lg:col-span-2 rounded-2xl bg-slate-900/60 border border-slate-800/80 p-5 shadow-xl">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h2 class="text-sm font-bold text-white flex items-center gap-2">
+            <span>Clearance Orders</span>
+            <span class="text-xs font-mono font-normal px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">{{ clearances.count }} Total</span>
+          </h2>
+          <p class="text-[11px] text-slate-400 mt-0.5">Click any order to inspect prerequisite gates or authorize digital shipment release.</p>
+        </div>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs">
+          <thead class="text-slate-400 border-b border-slate-800 uppercase tracking-wider text-[10px]">
+            <tr>
+              <th class="py-2.5 px-3">Order / Batch</th>
+              <th class="py-2.5 px-3">Part &amp; Destination</th>
+              <th class="py-2.5 px-3">Raw Material</th>
+              <th class="py-2.5 px-3">PDI Session</th>
+              <th class="py-2.5 px-3">Clearance Gate</th>
+              <th class="py-2.5 px-3 text-right">Audit</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-800/60 text-slate-300">
+            {% for d in clearances %}
+            <tr class="hover:bg-slate-800/40 transition">
+              <td class="py-3 px-3">
+                <a href="{% url 'inspection:dispatch_detail' d.id %}" class="font-mono font-bold text-teal-400 hover:text-teal-300 hover:underline block">
+                  {{ d.dispatch_order_number }}
+                </a>
+                <div class="text-[11px] text-slate-400 font-mono">{{ d.batch_or_serial_number }} (Qty: {{ d.quantity }})</div>
+              </td>
+              <td class="py-3 px-3">
+                <div class="font-semibold text-slate-200">{{ d.part.part_number }}</div>
+                <div class="text-[11px] text-slate-400 truncate max-w-[160px]" title="{{ d.destination }}">{{ d.destination }}</div>
+              </td>
+              <td class="py-3 px-3">
+                {% if d.material_batch %}
+                  <div class="font-mono text-slate-300">{{ d.material_batch.heat_number }}</div>
+                  {% if d.material_batch.status == 'ACCEPTED' %}
+                    <span class="inline-flex items-center text-[10px] text-emerald-400 font-semibold">✓ Accepted</span>
+                  {% elif d.material_batch.status == 'QUARANTINE' %}
+                    <span class="inline-flex items-center text-[10px] text-amber-400 font-semibold">⚠ Quarantine</span>
+                  {% else %}
+                    <span class="inline-flex items-center text-[10px] text-rose-400 font-semibold">✗ {{ d.material_batch.get_status_display }}</span>
+                  {% endif %}
+                {% else %}
+                  <span class="text-rose-400 font-mono text-[11px]">No Material</span>
+                {% endif %}
+              </td>
+              <td class="py-3 px-3">
+                {% if d.inspection_record %}
+                  <div class="font-mono text-slate-300">Session #{{ d.inspection_record.id }}</div>
+                  {% if d.inspection_record.overall_status == 'PASSED' and d.inspection_record.review_status == 'APPROVED' %}
+                    <span class="inline-flex items-center text-[10px] text-emerald-400 font-semibold">✓ Passed &amp; Signed</span>
+                  {% elif d.inspection_record.overall_status == 'PASSED' %}
+                    <span class="inline-flex items-center text-[10px] text-amber-300 font-semibold">⚠ Awaiting Sign-off</span>
+                  {% else %}
+                    <span class="inline-flex items-center text-[10px] text-rose-400 font-semibold">✗ {{ d.inspection_record.get_overall_status_display }}</span>
+                  {% endif %}
+                {% else %}
+                  <span class="text-rose-400 font-mono text-[11px]">No PDI Link</span>
+                {% endif %}
+              </td>
+              <td class="py-3 px-3">
+                {% if d.status == 'CLEARED' %}
+                  <span class="px-2.5 py-1 rounded-md bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 text-[11px] font-bold inline-flex items-center gap-1">
+                    <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    CLEARED
+                  </span>
+                  {% if d.cleared_by %}
+                    <div class="text-[10px] text-slate-400 mt-1 font-mono">By {{ d.cleared_by.username }}</div>
+                  {% endif %}
+                {% elif d.status == 'REJECTED' %}
+                  <span class="px-2.5 py-1 rounded-md bg-rose-500/15 text-rose-400 border border-rose-500/30 text-[11px] font-bold inline-flex items-center gap-1">
+                    <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                    REJECTED
+                  </span>
+                  {% if d.cleared_by %}
+                    <div class="text-[10px] text-slate-400 mt-1 font-mono">By {{ d.cleared_by.username }}</div>
+                  {% endif %}
+                {% else %}
+                  <span class="px-2.5 py-1 rounded-md bg-amber-500/15 text-amber-300 border border-amber-500/30 text-[11px] font-bold inline-flex items-center gap-1">
+                    <svg class="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                    </svg>
+                    PENDING AUDIT
+                  </span>
+                {% endif %}
+              </td>
+              <td class="py-3 px-3 text-right">
+                <a href="{% url 'inspection:dispatch_detail' d.id %}" 
+                   class="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-slate-800 hover:bg-teal-500/20 text-slate-300 hover:text-teal-300 border border-slate-700 transition text-[11px] font-medium">
+                  Verify Gate →
+                </a>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="6" class="py-8 text-center text-slate-500">
+                No dispatch clearance orders created yet. Initialize a shipment release order on the right.
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Initialize New Dispatch Order Form (1 Col) -->
+    <div class="rounded-2xl bg-slate-900/60 border border-slate-800/80 p-5 shadow-xl h-fit">
+      <div class="border-b border-slate-800 pb-3 mb-4">
+        <h2 class="text-sm font-bold text-white flex items-center gap-2">
+          <svg class="w-4 h-4 text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-2m-4-1v8m0 0l3-3m-3 3L9 8m-5 5h2.586a1 1 0 01.707.293l2.414 2.414a1 1 0 00.707.293h3.172a1 1 0 00.707-.293l2.414-2.414a1 1 0 01.707-.293H20"/>
+          </svg>
+          <span>Initialize Dispatch Order</span>
+        </h2>
+        <p class="text-[11px] text-slate-400 mt-1">Register a finished production batch for quality audit and shipping release.</p>
+      </div>
+
+      <form method="post" action="{% url 'inspection:dispatch_list' %}" class="space-y-4 text-xs">
+        {% csrf_token %}
+        
+        <div>
+          <label class="block text-slate-300 font-semibold mb-1">Dispatch Order Number *</label>
+          {{ form.dispatch_order_number }}
+          {% if form.dispatch_order_number.errors %}
+            <p class="text-rose-400 text-[11px] mt-1">{{ form.dispatch_order_number.errors.0 }}</p>
+          {% endif %}
+        </div>
+
+        <div>
+          <label class="block text-slate-300 font-semibold mb-1">Part Specification *</label>
+          {{ form.part }}
+          {% if form.part.errors %}
+            <p class="text-rose-400 text-[11px] mt-1">{{ form.part.errors.0 }}</p>
+          {% endif %}
+        </div>
+
+        <div>
+          <label class="block text-slate-300 font-semibold mb-1">Production Batch / Serial # *</label>
+          {{ form.batch_or_serial_number }}
+          {% if form.batch_or_serial_number.errors %}
+            <p class="text-rose-400 text-[11px] mt-1">{{ form.batch_or_serial_number.errors.0 }}</p>
+          {% endif %}
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-slate-300 font-semibold mb-1">Quantity *</label>
+            {{ form.quantity }}
+            {% if form.quantity.errors %}
+              <p class="text-rose-400 text-[11px] mt-1">{{ form.quantity.errors.0 }}</p>
+            {% endif %}
+          </div>
+          <div>
+            <label class="block text-slate-300 font-semibold mb-1">Destination *</label>
+            {{ form.destination }}
+            {% if form.destination.errors %}
+              <p class="text-rose-400 text-[11px] mt-1">{{ form.destination.errors.0 }}</p>
+            {% endif %}
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-slate-300 font-semibold mb-1">Traceable Inward Raw Material Batch</label>
+          {{ form.material_batch }}
+          <p class="text-[10px] text-slate-400 mt-0.5">Must be ACCEPTED with 0 open non-conformance reports.</p>
+          {% if form.material_batch.errors %}
+            <p class="text-rose-400 text-[11px] mt-1">{{ form.material_batch.errors.0 }}</p>
+          {% endif %}
+        </div>
+
+        <div>
+          <label class="block text-slate-300 font-semibold mb-1">Final PDI Inspection Record</label>
+          {{ form.inspection_record }}
+          <p class="text-[10px] text-slate-400 mt-0.5">Must have 100% PASS dimensional readings &amp; supervisor approval.</p>
+          {% if form.inspection_record.errors %}
+            <p class="text-rose-400 text-[11px] mt-1">{{ form.inspection_record.errors.0 }}</p>
+          {% endif %}
+        </div>
+
+        <div>
+          <label class="block text-slate-300 font-semibold mb-1">Shipping &amp; Packaging Notes</label>
+          {{ form.clearance_notes }}
+          {% if form.clearance_notes.errors %}
+            <p class="text-rose-400 text-[11px] mt-1">{{ form.clearance_notes.errors.0 }}</p>
+          {% endif %}
+        </div>
+
+        <!-- Zero-Escape Gate Safety Banner -->
+        <div class="p-3 rounded-xl bg-slate-950/70 border border-cyan-500/20 text-[11px] text-slate-300 space-y-1.5">
+          <div class="font-bold text-cyan-400 flex items-center gap-1.5 font-mono text-[10px] uppercase">
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+            </svg>
+            <span>ISO 9001 Zero-Escape Safety Gate</span>
+          </div>
+          <p class="text-slate-400">
+            Authorization requires Plant Manager or Quality Manager review. The database rejects any shipment where material, routing, hold times, or PDI remain incomplete.
+          </p>
+        </div>
+
+        <button type="submit" 
+                class="w-full py-2.5 px-4 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold text-xs transition shadow-md shadow-teal-500/20 flex items-center justify-center gap-1.5 cursor-pointer">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+          </svg>
+          <span>Initialize Dispatch Order</span>
+        </button>
+      </form>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}

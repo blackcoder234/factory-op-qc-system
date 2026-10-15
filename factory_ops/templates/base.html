@@ -65,8 +65,12 @@
             Materials &amp; Receiving
           </a>
           <a href="{% url 'inspection:checklist_list' %}" 
-             class="px-3 py-1.5 rounded-md transition-all {% if request.resolver_match.app_name == 'inspection' %}bg-white/[0.08] text-white font-semibold border border-white/10 shadow-sm{% else %}text-slate-400 hover:text-white hover:bg-white/[0.04]{% endif %}">
+             class="px-3 py-1.5 rounded-md transition-all {% if request.resolver_match.app_name == 'inspection' and 'dispatch' not in request.path %}bg-white/[0.08] text-white font-semibold border border-white/10 shadow-sm{% else %}text-slate-400 hover:text-white hover:bg-white/[0.04]{% endif %}">
             Quality Inspections
+          </a>
+          <a href="{% url 'inspection:dispatch_list' %}" 
+             class="px-3 py-1.5 rounded-md transition-all {% if 'dispatch' in request.path %}bg-white/[0.08] text-white font-semibold border border-white/10 shadow-sm{% else %}text-slate-400 hover:text-white hover:bg-white/[0.04]{% endif %}">
+            Dispatch Clearance
           </a>
         </nav>
 
@@ -103,21 +107,24 @@
               </div>
               <div class="flex items-center gap-1.5 text-xs">
                 <span class="font-semibold text-slate-200">{{ user.username }}</span>
-                <span class="text-[10px] font-mono px-1.5 py-0.2 rounded bg-slate-800 text-slate-400 border border-slate-700">
-                  {% if user.is_staff or user.is_superuser %}Supervisor{% else %}Operator{% endif %}
+                <span class="text-[10px] font-mono px-1.5 py-0.2 rounded bg-slate-800 text-cyan-300 border border-slate-700 font-medium">
+                  {{ primary_role|default:"Operator" }}
                 </span>
               </div>
             </div>
 
-            <!-- Sign Out Button -->
-            <a href="{% url 'master_setup:logout' %}" 
-               title="Sign Out" 
-               class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-md transition border border-transparent hover:border-rose-500/20">
-              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-              </svg>
-              <span class="hidden sm:inline">Sign Out</span>
-            </a>
+            <!-- Sign Out Button (CSRF-Protected POST) -->
+            <form method="post" action="{% url 'master_setup:logout' %}" class="inline m-0 p-0">
+              {% csrf_token %}
+              <button type="submit" 
+                      title="Sign Out" 
+                      class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-md transition border border-transparent hover:border-rose-500/20 cursor-pointer">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                </svg>
+                <span class="hidden sm:inline">Sign Out</span>
+              </button>
+            </form>
           {% else %}
             <a href="{% url 'master_setup:login' %}" 
                class="px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-400 hover:to-teal-400 text-slate-950 transition shadow-sm">

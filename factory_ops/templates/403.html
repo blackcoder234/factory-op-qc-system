@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}403 Access Denied — Apex Precision FactoryOps{% endblock %}
+
+{% block content %}
+<div class="min-h-[60vh] flex items-center justify-center py-12 px-4">
+  <div class="max-w-md w-full text-center space-y-6">
+    <div class="w-16 h-16 mx-auto rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400 shadow-lg shadow-rose-500/10">
+      <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+      </svg>
+    </div>
+
+    <div>
+      <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-rose-500/10 border border-rose-500/20 text-rose-300 font-mono text-xs font-bold mb-3 uppercase tracking-wider">
+        <span>● Error 403 // Access Prohibited</span>
+      </div>
+      <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">Authorization Required</h1>
+      <p class="text-sm text-slate-300 mt-2 leading-relaxed">
+        {{ exception|default:"Your current operational role does not have authorization to view this workstation or perform this state-changing action." }}
+      </p>
+    </div>
+
+    <div class="p-4 rounded-xl bg-slate-900/80 border border-slate-800 text-left text-xs space-y-2">
+      <div class="flex items-center justify-between text-slate-400 font-mono">
+        <span>Authenticated User:</span>
+        <span class="text-white font-semibold">{{ request.user.username|default:"Unauthenticated" }}</span>
+      </div>
+      <div class="flex items-center justify-between text-slate-400 font-mono">
+        <span>Assigned Role(s):</span>
+        <span class="text-cyan-300 font-semibold">{{ primary_role|default:"None" }}</span>
+      </div>
+      <div class="flex items-center justify-between text-slate-400 font-mono">
+        <span>Terminal Node:</span>
+        <span class="text-slate-300">PLANT APX-09</span>
+      </div>
+    </div>
+
+    <div class="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+      <a href="{% url 'master_setup:dashboard' %}" class="w-full sm:w-auto px-5 py-2.5 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs transition shadow-md shadow-cyan-500/20">
+        Return to Plant Dashboard
+      </a>
+      <a href="{% url 'master_setup:home' %}" class="w-full sm:w-auto px-5 py-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs border border-slate-700 transition">
+        Public Home
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}
