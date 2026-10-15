@@ -1,0 +1,192 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-950 text-slate-100">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Plant Terminal Access — Apex Precision Dynamics QMS</title>
+  
+  <!-- Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Compiled Local Tailwind CSS v4 & Custom CSS -->
+  <link rel="stylesheet" href="{% static 'css/tailwind.css' %}?v=20261014">
+  <link rel="stylesheet" href="{% static 'css/custom.css' %}?v=20261014">
+</head>
+<body class="min-h-full flex flex-col bg-slate-950 text-slate-200 antialiased selection:bg-cyan-500/20 selection:text-cyan-400">
+
+  <!-- Background Decorative Grid & Glow -->
+  <div class="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+    <div class="absolute -top-32 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-gradient-to-b from-cyan-600/10 via-teal-600/5 to-transparent blur-3xl opacity-60"></div>
+    <div class="absolute inset-0 bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:24px_24px] opacity-25"></div>
+  </div>
+
+  <!-- Minimal Top Header -->
+  <header class="relative z-10 border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <a href="{% url 'master_setup:home' %}" class="flex items-center gap-3 group">
+        <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-cyan-500 to-teal-400 p-[1.5px]">
+          <div class="w-full h-full bg-slate-950 rounded-[7px] flex items-center justify-center">
+            <svg class="w-4 h-4 text-cyan-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+            </svg>
+          </div>
+        </div>
+        <div>
+          <span class="text-sm font-extrabold tracking-tight text-white group-hover:text-cyan-400 transition">FactoryOps</span>
+          <span class="text-[10px] text-slate-400 font-mono block">Apex Precision Dynamics • Terminal APX-09</span>
+        </div>
+      </a>
+
+      <a href="{% url 'master_setup:home' %}" class="text-xs text-slate-400 hover:text-white transition flex items-center gap-1.5 font-medium">
+        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+        <span>Back to Public Overview</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- Login Main Content -->
+  <main class="relative z-10 flex-1 flex items-center justify-center px-4 py-12">
+    <div class="w-full mx-auto" style="max-width: 440px;">
+      
+      <!-- Terminal Login Card -->
+      <div class="terminal-card">
+        
+        <!-- Badge & Title -->
+        <div style="text-align: center; margin-bottom: 1.75rem;">
+          <div class="telemetry-badge" style="margin-bottom: 0.75rem;">
+            <span class="pulse-dot"></span>
+            Restricted Operational Terminal
+          </div>
+          <h1 style="font-size: 1.5rem; font-weight: 800; color: #ffffff; letter-spacing: -0.025em; margin: 0;">Plant Personnel Sign-In</h1>
+          <p style="font-size: 0.75rem; color: #94a3b8; margin-top: 0.5rem; line-height: 1.4;">Enter authorized employee credentials to access the shopfloor quality & operations system.</p>
+        </div>
+
+        <!-- Flash Messages Container -->
+        {% if messages %}
+        <div style="margin-bottom: 1.25rem; display: flex; flex-direction: column; gap: 0.5rem;">
+          {% for message in messages %}
+            {% if 'success' in message.tags %}
+              <div style="padding: 0.75rem 0.875rem; border-radius: 0.625rem; font-size: 0.75rem; font-weight: 500; display: flex; align-items: center; gap: 0.625rem; background: rgba(6, 78, 59, 0.5); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.3);">
+                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="flex-shrink: 0; color: #34d399;">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>{{ message }}</span>
+              </div>
+            {% elif 'error' in message.tags or 'danger' in message.tags %}
+              <div style="padding: 0.75rem 0.875rem; border-radius: 0.625rem; font-size: 0.75rem; font-weight: 500; display: flex; align-items: center; gap: 0.625rem; background: rgba(136, 19, 55, 0.5); color: #fda4af; border: 1px solid rgba(244, 63, 94, 0.3);">
+                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="flex-shrink: 0; color: #fb7185;">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>{{ message }}</span>
+              </div>
+            {% elif 'warning' in message.tags %}
+              <div style="padding: 0.75rem 0.875rem; border-radius: 0.625rem; font-size: 0.75rem; font-weight: 500; display: flex; align-items: center; gap: 0.625rem; background: rgba(120, 53, 15, 0.5); color: #fde68a; border: 1px solid rgba(245, 158, 11, 0.3);">
+                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="flex-shrink: 0; color: #fbbf24;">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <span>{{ message }}</span>
+              </div>
+            {% else %}
+              <div style="padding: 0.75rem 0.875rem; border-radius: 0.625rem; font-size: 0.75rem; font-weight: 500; display: flex; align-items: center; gap: 0.625rem; background: rgba(15, 23, 42, 0.85); color: #93c5fd; border: 1px solid rgba(59, 130, 246, 0.3);">
+                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="flex-shrink: 0; color: #60a5fa;">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>{{ message }}</span>
+              </div>
+            {% endif %}
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Form -->
+        <form method="post" action="{% url 'master_setup:login' %}" style="display: flex; flex-direction: column; gap: 1rem;">
+          {% csrf_token %}
+          
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.375rem;">
+              <label for="id_username" style="font-size: 0.75rem; font-weight: 600; color: #cbd5e1;">Employee ID / Call-Sign</label>
+              <span style="font-size: 0.625rem; color: #64748b; font-family: var(--font-mono);">Operator ID</span>
+            </div>
+            <div class="terminal-input-wrapper">
+              <span class="terminal-input-icon">
+                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </span>
+              <input type="text" name="username" id="id_username" required autofocus
+                     placeholder="e.g. supervisor"
+                     class="terminal-input">
+            </div>
+          </div>
+
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.375rem;">
+              <label for="id_password" style="font-size: 0.75rem; font-weight: 600; color: #cbd5e1;">Security PIN / Password</label>
+              <span style="font-size: 0.625rem; color: #64748b; font-family: var(--font-mono);">Confidential</span>
+            </div>
+            <div class="terminal-input-wrapper">
+              <span class="terminal-input-icon">
+                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+              </span>
+              <input type="password" name="password" id="id_password" required
+                     placeholder="••••••••••••"
+                     class="terminal-input">
+            </div>
+          </div>
+
+          <button type="submit" 
+                  class="btn-industrial-primary"
+                  style="width: 100%; margin-top: 0.5rem; text-transform: uppercase;">
+            <span>Authenticate & Enter Terminal</span>
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+          </button>
+        </form>
+
+        <!-- Enterprise Notice (No Public Registration) -->
+        <div style="margin-top: 1.5rem; padding: 0.75rem; border-radius: 0.5rem; background: rgba(3, 7, 18, 0.5); border: 1px solid rgba(51, 65, 85, 0.5); font-size: 0.6875rem; color: #94a3b8; display: flex; align-items: flex-start; gap: 0.625rem; line-height: 1.45;">
+          <svg style="width: 16px; height: 16px; color: #f59e0b; flex-shrink: 0; margin-top: 2px;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <div>
+            <strong style="color: #cbd5e1;">Internal Policy:</strong> Public registration is disabled. Terminal user accounts are pre-provisioned by Plant IT & Quality Assurance according to ISO 9001 audit standards.
+          </div>
+        </div>
+
+        <!-- Discreet Demo / Evaluator Helper -->
+        <div class="demo-access-box" style="margin-top: 1rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.375rem;">
+            <span style="font-size: 0.625rem; font-family: var(--font-mono); font-weight: 700; color: #22d3ee; text-transform: uppercase; letter-spacing: 0.05em;">Evaluation Demo Access</span>
+            <button type="button" onclick="autofillDemo()" style="font-size: 0.625rem; font-weight: 700; color: #67e8f9; background: none; border: none; text-decoration: underline; cursor: pointer; padding: 0;">
+              Autofill Credentials
+            </button>
+          </div>
+          <div style="font-family: var(--font-mono); font-size: 0.6875rem; color: #cbd5e1; display: flex; justify-content: space-between; align-items: center;">
+            <span>User: <strong style="color: #ffffff;">supervisor</strong></span>
+            <span>Password: <strong style="color: #ffffff;">ApexQC#2026</strong></span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Facility Compliance Footer -->
+      <div class="text-center mt-6 text-[11px] font-mono text-slate-500">
+        APEX PRECISION DYNAMICS • TERMINAL BUILD 2026.10
+      </div>
+
+    </div>
+  </main>
+
+  <script>
+    function autofillDemo() {
+      document.getElementById('id_username').value = 'supervisor';
+      document.getElementById('id_password').value = 'ApexQC#2026';
+    }
+  </script>
+
+</body>
+</html>

@@ -1,6 +1,7 @@
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 from datetime import date, timedelta
+from django.contrib.auth.models import User
 
 from master_setup.models import Department, Machine, Part, InspectionGauge
 from calibration.models import MaintenanceRecord, MachineCalibrationRecord, WorkstationLock
@@ -12,6 +13,21 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         self.stdout.write(self.style.NOTICE("Seeding FactoryOps QC demo data..."))
+
+        # 0. OPERATOR & SUPERVISOR USERS
+        supervisor, sup_created = User.objects.get_or_create(
+            username="supervisor",
+            defaults={
+                "email": "supervisor@apexprecision.com",
+                "first_name": "Amarnath",
+                "last_name": "Bera (Lead)",
+                "is_staff": True,
+                "is_superuser": True,
+            }
+        )
+        if sup_created or not supervisor.has_usable_password():
+            supervisor.set_password("ApexQC#2026")
+            supervisor.save()
 
         # 1. DEPARTMENTS
         dept_machining, _ = Department.objects.get_or_create(

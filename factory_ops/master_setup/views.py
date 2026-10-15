@@ -1,5 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
+from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
+from django.contrib.auth.decorators import login_required
 from datetime import date
 
 from .models import Department, Machine, Part, InspectionGauge
@@ -9,6 +11,54 @@ from calibration.models import WorkstationLock, MaintenanceRecord
 from material_intake.models import MaterialBatch, SupplierNonConformance
 from inspection.models import InspectionRecord, InspectionChecklist
 
+def home(request):
+    """Apex Precision Dynamics — Public Company & Plant Overview Landing Page."""
+    total_machines = Machine.objects.filter(is_active=True).count()
+    total_gauges = InspectionGauge.objects.filter(is_active=True).count()
+    total_parts = Part.objects.filter(is_active=True).count()
+    total_departments = Department.objects.filter(is_active=True).count()
+    total_batches = MaterialBatch.objects.count()
+    total_checklists = InspectionChecklist.objects.filter(is_active=True).count()
+
+    return render(request, 'landing.html', {
+        'total_machines': total_machines,
+        'total_gauges': total_gauges,
+        'total_parts': total_parts,
+        'total_departments': total_departments,
+        'total_batches': total_batches,
+        'total_checklists': total_checklists,
+    })
+
+
+def user_login(request):
+    """Industrial Plant Terminal Authentication."""
+    if request.user.is_authenticated:
+        return redirect('master_setup:dashboard')
+
+    if request.method == 'POST':
+        username = request.POST.get('username', '').strip()
+        password = request.POST.get('password', '').strip()
+
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            auth_login(request, user)
+            role_title = "Plant Supervisor" if user.is_staff else "Operator"
+            messages.success(request, f'Terminal session authenticated. Welcome, {role_title} {user.username}.')
+            return redirect('master_setup:dashboard')
+        else:
+            messages.error(request, 'Access Denied: Invalid employee call-sign or security PIN.')
+
+    return render(request, 'auth/login.html')
+
+
+def user_logout(request):
+    """Terminate terminal session."""
+    auth_logout(request)
+    messages.info(request, 'Terminal session terminated. You have been logged out.')
+    return redirect('master_setup:home')
+
+
+@login_required(login_url='master_setup:login')
 def dashboard(request):
     """Factory Operations Plant Overview Dashboard with live KPIs and alerts."""
     # Key Metrics

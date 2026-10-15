@@ -1,5 +1,9 @@
 @import "tailwindcss";
+@import "./custom.css";
 
-/* Scan templates across all apps and root templates */
+/* Scan all HTML templates and Python files */
 @source "../../templates/**/*.html";
 @source "../../**/templates/**/*.html";
+@source "../../**/*.html";
+@source "../../**/*.py";
+
