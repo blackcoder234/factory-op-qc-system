@@ -27,23 +27,28 @@
 
   <!-- Refined Industrial Header / Navbar -->
   <header class="relative z-50 border-b border-white/[0.07] bg-slate-950/80 backdrop-blur-xl sticky top-0 transition-all">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="w-full px-4 sm:px-6 lg:px-8">
       <div class="flex items-center justify-between h-16">
         
         <!-- Corporate Identity & Brand Mark -->
-        <a href="{% url 'master_setup:home' %}" class="flex items-center gap-3 group">
-          <div class="w-9 h-9 rounded-lg bg-gradient-to-tr from-cyan-500/20 via-slate-800 to-slate-900 border border-cyan-500/30 flex items-center justify-center shadow-sm group-hover:border-cyan-400/60 transition-colors">
-            <svg class="w-5 h-5 text-cyan-400 group-hover:text-cyan-300 transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 2.25L3.75 7v10L12 21.75 20.25 17V7L12 2.25z" />
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 2.25V12m0 0l8.25 5M12 12l-8.25 5" />
-            </svg>
-          </div>
-          <div class="flex items-center gap-2.5">
+        <div class="flex items-center gap-3">
+          <a href="{% url 'master_setup:home' %}" class="flex items-center gap-2.5 group">
+            <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-cyan-500/20 via-slate-800 to-slate-900 border border-cyan-500/30 flex items-center justify-center shadow-sm group-hover:border-cyan-400/60 transition-colors">
+              <svg class="w-4 h-4 text-cyan-400 group-hover:text-cyan-300 transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 2.25L3.75 7v10L12 21.75 20.25 17V7L12 2.25z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 2.25V12m0 0l8.25 5M12 12l-8.25 5" />
+              </svg>
+            </div>
             <span class="text-sm font-bold tracking-tight text-white group-hover:text-cyan-400 transition-colors">APEX PRECISION</span>
-            <span class="text-slate-700 font-mono text-xs">/</span>
-            <span class="text-[11px] font-mono font-medium text-cyan-400 tracking-wider uppercase">FactoryOps</span>
+          </a>
+
+          <span class="text-slate-700 font-mono text-xs">/</span>
+
+          <div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-white/[0.04] border border-white/[0.08] text-[11px] font-mono text-slate-300">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+            <span>Plant APX-09</span>
           </div>
-        </a>
+        </div>
 
         <!-- Center Navigation Links -->
         <nav class="hidden md:flex items-center gap-1 text-[13px] font-medium text-slate-400">
@@ -61,16 +66,8 @@
           </a>
         </nav>
 
-        <!-- Right Side: Facility Indicator & Terminal Access -->
+        <!-- Right Side: Terminal Access -->
         <div class="flex items-center gap-3">
-          <!-- Discreet Facility Indicator -->
-          <span class="hidden sm:inline-flex items-center gap-1.5 text-[11px] font-mono text-slate-500 mr-1">
-            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-            APX-09
-          </span>
-
-          <div class="h-4 w-[1px] bg-slate-800 hidden sm:block"></div>
-
           {% if user.is_authenticated %}
             <a href="{% url 'master_setup:dashboard' %}" class="btn-industrial-primary" style="padding: 0.45rem 1.125rem; font-size: 0.75rem;">
               <span>Factory Dashboard</span>
