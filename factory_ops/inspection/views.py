@@ -18,7 +18,7 @@ from .forms import (
 from master_setup.models import InspectionGauge
 
 from django.contrib.auth.decorators import login_required
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ValidationError
 from master_setup.rbac import (
     check_action_permission,
     ROLES_CAN_CREATE_CHECKLIST,
@@ -135,6 +135,10 @@ def record_detail(request, record_id):
             if not check_action_permission(request.user, *ROLES_CAN_ENTER_READINGS):
                 raise PermissionDenied("Access Denied: Only QA Floor Inspectors, Quality Engineers, or Quality Managers can record measurement readings.")
 
+            if record.review_status == 'APPROVED':
+                messages.error(request, "This inspection session has already been APPROVED and locked by supervisor. Measurement readings cannot be modified.")
+                return redirect('inspection:record_detail', record_id=record.id)
+
             item_id = request.POST.get('item_id')
             gauge_id = request.POST.get('gauge_id')
             notes = request.POST.get('notes', '')
@@ -158,16 +162,20 @@ def record_detail(request, record_id):
                     messages.error(request, "Invalid characteristic checkpoint for this session.")
                     return redirect('inspection:record_detail', record_id=record.id)
 
-                reading, created = MeasurementReading.objects.get_or_create(
-                    record=record,
-                    checklist_item=item,
-                    defaults={'actual_value': val_float, 'used_gauge': gauge, 'notes': notes}
-                )
-                if not created:
-                    reading.actual_value = val_float
-                    reading.used_gauge = gauge
-                    reading.notes = notes
-                    reading.save()
+                try:
+                    reading, created = MeasurementReading.objects.get_or_create(
+                        record=record,
+                        checklist_item=item,
+                        defaults={'actual_value': val_float, 'used_gauge': gauge, 'notes': notes}
+                    )
+                    if not created:
+                        reading.actual_value = val_float
+                        reading.used_gauge = gauge
+                        reading.notes = notes
+                        reading.save()
+                except Exception as ex:
+                    messages.error(request, f"Measurement Entry Error: {ex}")
+                    return redirect('inspection:record_detail', record_id=record.id)
 
                 if reading.result == 'PASS':
                     messages.success(request, f'✓ Item #{item.sequence_number} ({item.characteristic_name}) = {reading.actual_value} mm -> PASS (within {item.lower_limit}–{item.upper_limit} mm)')
@@ -194,6 +202,7 @@ def record_detail(request, record_id):
             record.reviewed_by = request.user.get_full_name() or request.user.username
             record.reviewed_at = timezone.now()
             record.review_notes = request.POST.get('review_notes', '')
+            record.full_clean()
             record.save()
             messages.success(request, f'Inspection Session #{record.id} successfully reviewed and APPROVED by {record.reviewed_by}!')
             return redirect('inspection:record_detail', record_id=record.id)

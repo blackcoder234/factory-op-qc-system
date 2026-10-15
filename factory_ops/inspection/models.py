@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils import timezone
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
 from master_setup.models import Part, Machine, InspectionGauge
 from .validators import validate_measurement_value
 
@@ -128,6 +129,13 @@ class InspectionRecord(models.Model):
     def __str__(self):
         return f"Record #{self.id} [{self.batch_or_serial_number}] — {self.checklist.part.part_number}"
 
+    def clean(self):
+        super().clean()
+        if self.review_status == 'APPROVED':
+            blockers = self.get_approval_blockers()
+            if blockers:
+                raise ValidationError(f"Inspection session cannot be APPROVED while blockers remain: {'; '.join(blockers)}")
+
     def update_overall_status(self):
         """Auto-evaluates overall record status based on all readings."""
         readings = self.readings.all()
@@ -139,6 +147,13 @@ class InspectionRecord(models.Model):
             self.overall_status = 'FAILED'
         else:
             self.overall_status = 'PASSED'
+
+        # Ensure review status consistency: if session is no longer PASSED, review cannot remain APPROVED
+        if self.overall_status != 'PASSED' and self.review_status == 'APPROVED':
+            self.review_status = 'PENDING'
+            self.reviewed_by = ''
+            self.reviewed_at = None
+
         self.save()
 
     def get_approval_blockers(self):
@@ -223,11 +238,43 @@ class MeasurementReading(models.Model):
         verbose_name = 'Measurement Reading'
         verbose_name_plural = 'Measurement Readings'
 
+    def clean(self):
+        super().clean()
+        if self.actual_value is not None:
+            validate_measurement_value(self.actual_value)
+
+        if self.checklist_item_id and self.record_id:
+            if self.checklist_item.checklist_id != self.record.checklist_id:
+                raise ValidationError(
+                    f"Checklist item '{self.checklist_item.characteristic_name}' belongs to checklist #{self.checklist_item.checklist_id}, "
+                    f"not to record #{self.record.id}'s checklist #{self.record.checklist_id}."
+                )
+
+        effective_gauge = self.used_gauge or (self.checklist_item.recommended_gauge if self.checklist_item_id else None)
+        if effective_gauge:
+            if not effective_gauge.is_active:
+                raise ValidationError(
+                    f"Selected instrument '{effective_gauge.serial_number}' is marked INACTIVE or decommissioned."
+                )
+            if effective_gauge.is_calibration_expired:
+                raise ValidationError(
+                    f"MEASUREMENT ENTRY BLOCKED: Measuring instrument '{effective_gauge.serial_number}' calibration EXPIRED on {effective_gauge.calibration_due_date}! "
+                    "ISO 9001 and calibration safety protocols prohibit recording measurements with uncalibrated tools."
+                )
+
+        # Locked inspection session check
+        if self.record_id and self.record.review_status == 'APPROVED':
+            raise ValidationError(
+                f"Inspection session #{self.record.id} has already been APPROVED by supervisor. "
+                "Completed and approved inspection records are locked against measurement modifications."
+            )
+
     def save(self, *args, **kwargs):
         """
         Auto-calculate Pass/Fail tolerance check right before saving.
         Guarantees business logic integrity at the database model level.
         """
+        self.full_clean()
         item = self.checklist_item
         lower = item.lower_limit
         upper = item.upper_limit
@@ -375,7 +422,12 @@ class DispatchClearance(models.Model):
 
         # 2. Production operations & mandatory hold period validation
         ops = ProductionOperation.objects.filter(batch_number=self.batch_or_serial_number)
-        if ops.exists():
+        if not ops.exists():
+            blockers.append(
+                f"Routing Traceability Gap: No production operations recorded for batch '{self.batch_or_serial_number}'. "
+                f"Manufacturing routing steps must be logged and completed before dispatch."
+            )
+        else:
             incomplete = ops.exclude(status='COMPLETED')
             if incomplete.exists():
                 op_names = ", ".join(f"OP-{o.sequence_number} ({o.operation_name})" for o in incomplete)
@@ -383,7 +435,7 @@ class DispatchClearance(models.Model):
 
             unelapsed = [o for o in ops if not o.is_hold_elapsed]
             if unelapsed:
-                hold_details = ", ".join(f"OP-{o.sequence_number} ({o.operation_name}: {o.remaining_hold_seconds // 60}m remaining)" for o in unelapsed)
+                hold_details = ", ".join(f"OP-{o.sequence_number} ({o.operation_name}: {o.remaining_hold_minutes}m remaining)" for o in unelapsed)
                 blockers.append(f"Mandatory Process Hold Unelapsed: {hold_details} has not satisfied required holding duration.")
 
         # 3. PDI Inspection record validation

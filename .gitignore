@@ -39,3 +39,4 @@ package-lock.json
 #docs
 docs
 PROJECT_LOG.md
+tmp/

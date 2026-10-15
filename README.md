@@ -9,7 +9,7 @@ Facility: **Apex Precision Dynamics Ltd. — Plant APX-09**
 [![Django](https://img.shields.io/badge/Django-5.2+-092E20?style=for-the-badge&logo=django&logoColor=white)](https://www.djangoproject.com/)
 [![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4.0-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
-[![Tests](https://img.shields.io/badge/Tests-39%20Passed%20%E2%9C%93-emerald?style=for-the-badge)](#-automated-testing-suite)
+[![Tests](https://img.shields.io/badge/Tests-49%20Passed%20%E2%9C%93-emerald?style=for-the-badge)](#-automated-testing-suite)
 [![Security](https://img.shields.io/badge/Security-RBAC%20%26%20Zero--Escape-blue?style=for-the-badge)](#-security--production-hardening)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
 
@@ -21,7 +21,7 @@ Facility: **Apex Precision Dynamics Ltd. — Plant APX-09**
 
 In precision mechanical manufacturing facilities, paper logbooks and manual inspection checklists lead to quality escapes, overdue machine tool operations, and untraceable metallurgical deviations. 
 
-**FactoryOps QC** digitizes the entire shopfloor manufacturing quality lifecycle into a unified, audit-compliant web application. Built for **Apex Precision Dynamics (Plant APX-09)**, the platform replaces paper logbooks with server-side enforced digital quality gates, strict role-based access control (RBAC), instrument calibration tracking, and an atomic zero-escape dispatch clearance workflow conforming to ISO 9001 requirements.
+**FactoryOps QC** digitizes the shopfloor manufacturing quality lifecycle into a unified, audit-compliant web application. Built for **Apex Precision Dynamics (Plant APX-09)**, the platform replaces manual tracking with server-side enforced digital quality gates, strict role-based access control (RBAC), instrument calibration tracking, and an atomic zero-escape dispatch clearance workflow architected around ISO 9001 quality management principles.
 
 ---
 
@@ -50,19 +50,19 @@ In precision mechanical manufacturing facilities, paper logbooks and manual insp
     <tr>
       <td>📦 <b>Module 3: Material Intake &amp; MTC Verification</b></td>
       <td>
-        Inward dock receiving workflow tracking supplier heat numbers, purchase orders, chemical composition tolerances (C, Mn, Si, P, S), mechanical properties (UTS, YS, Hardness, Elongation), and Supplier Non-Conformance (SNCR) quarantine flows. Features strict document validation (10MB limit, file signatures, sanitized filenames) and multi-point server-side batch acceptance gating.
+        Inward dock receiving workflow tracking supplier heat numbers, purchase orders, chemical composition tolerances (C, Mn, Si, P, S), mechanical properties (UTS, YS, Hardness, Elongation), and Supplier Non-Conformance (SNCR) quarantine flows. Features strict document validation (10MB limit, binary magic byte signature verification for PDF, PNG, JPG, TIFF, zero-byte file rejection, sanitized filenames) and multi-point server-side batch acceptance gating with audit trail recording (<code>accepted_by</code>, <code>accepted_at</code>).
       </td>
     </tr>
     <tr>
       <td>📐 <b>Module 4: Quality Inspections &amp; PDI</b></td>
       <td>
-        Inspection checklist template studio defining nominal dimensions and tolerances ($50.00 \pm 0.02\text{ mm}$) with real-time automated <b>PASS / FAIL</b> evaluation upon measurement entry. Enforces finite float validation, rejects expired/inactive measuring instruments, and requires formal supervisor sign-off before downstream processing.
+        Inspection checklist template studio defining nominal dimensions and tolerances ($50.00 \pm 0.02\text{ mm}$) with real-time automated <b>PASS / FAIL</b> evaluation upon measurement entry. Enforces finite numeric float validation, rejects expired/inactive measuring instruments, validates checklist-item ownership, locks approved sessions against post-approval tampering, and requires formal supervisor sign-off before downstream processing.
       </td>
     </tr>
     <tr>
       <td>🚢 <b>Module 5: Zero-Escape Dispatch Clearance</b></td>
       <td>
-        Database-backed shipping release gate linking finished parts to raw material heat lots, intermediate shopfloor routing operations, mandatory process hold periods (e.g. stress relief cooling), and approved PDI inspection records. release authorization requires Quality Manager or Plant Manager sign-off wrapped in atomic database locks.
+        Database-backed shipping release gate linking finished parts to raw material heat lots, intermediate shopfloor routing operations, mandatory process hold periods (e.g. stress relief cooling), and approved PDI inspection records. Requires that manufacturing routing operations exist and are completed; an empty routing strictly blocks clearance. Release authorization requires Quality Manager or Plant Manager sign-off wrapped in atomic database locks.
       </td>
     </tr>
   </tbody>
@@ -102,10 +102,12 @@ The application implements a 5-role operational hierarchy enforced at the server
 - **Dynamic Environment Loading**: `SECRET_KEY`, `DEBUG`, `ALLOWED_HOSTS`, and admin credentials are loaded from environment variables (`.env`) via `python-dotenv`.
 - **Fail-Closed Production Default**: `DEBUG` defaults to `False` if not set; `SECRET_KEY` raises an immediate `ImproperlyConfigured` exception in production if missing.
 - **CSRF-Protected State Changes**: All state mutations (locking workstations, saving readings, approving records, and logging out) use CSRF-protected `POST` requests. `GET /logout/` is rejected with `405 Method Not Allowed`.
-- **Zero Exposed Demo Credentials**: Public login page autofill credentials and displayed passwords have been removed and replaced with an ISO 9001 plant security terminal notice.
-- **Sanitized Upload Pipeline**: Mill Test Certificates are strictly validated against a 10MB limit and allowed extensions (`.pdf`, `.png`, `.jpg`, `.jpeg`, `.tif`, `.tiff`) with UUID-sanitized filenames.
+- **Zero Exposed Demo Credentials**: Public login page autofill credentials and displayed passwords have been removed and replaced with a plant security terminal notice.
+- **Binary Magic-Byte Upload Validation**: Uploaded Mill Test Certificates are validated against a 10MB limit and inspected for magic byte file signatures (`%PDF-`, `\x89PNG\r\n\x1a\n`, `\xff\xd8\xff`, `II*\x00`/`MM\x00*`) and zero-byte rejection, preventing disguised or spoofed binary uploads.
 - **Finiteness & Overflow Protection**: All measurement inputs are validated against non-finite values (`NaN`, `Infinity`) and clamped within physically realistic bounds.
-- **Concurrency Protection**: Dispatch clearance authorization is protected with `transaction.atomic()` and `select_for_update()` to prevent race conditions during shipping release.
+- **Approval Immutability & Status Integrity**: Approved inspection records are locked against measurement modifications. Any status re-evaluation that results in a failure automatically resets supervisor approval to `PENDING`.
+- **Concurrency & Routing Protection**: Dispatch clearance authorization is protected with `transaction.atomic()` and `select_for_update()` to prevent race conditions during shipping release. Dispatch is unconditionally blocked if production routing operations are missing or incomplete.
+- **Standards Alignment Notice**: Designed and hardened as an internship assessment demonstration platform architected around ISO 9001 quality management principles, without claiming formal accredited laboratory certification.
 
 ---
 
@@ -249,7 +251,7 @@ Open your browser:
 
 ## 🧪 Automated Testing Suite
 
-The repository includes **39 automated unit and integration tests** testing all core business rules and security controls:
+The repository includes **49 automated unit and integration tests** testing all core business rules and security controls:
 
 ```bash
 cd factory_ops
@@ -259,11 +261,11 @@ python manage.py test
 ### Test Suite Execution Output
 ```text
 Creating test database for alias 'default'...
-Found 39 test(s).
+Found 49 test(s).
 System check identified no issues (0 silenced).
-.......................................
+.................................................
 ----------------------------------------------------------------------
-Ran 39 tests in 58.486s
+Ran 49 tests in 119.200s
 
 OK
 Destroying test database for alias 'default'...
@@ -272,9 +274,9 @@ Destroying test database for alias 'default'...
 ### Test Coverage Highlights
 - **Authentication & RBAC (`master_setup/tests.py`)**: Tests login redirects, CSRF-protected POST logout, group role assignments, and 403 Forbidden enforcement on restricted endpoints.
 - **Workstation Safety Interlocks (`calibration/tests.py`)**: Tests automated overdue PM detection, workstation lock toggles, and role permission validation for equipment release.
-- **Material Intake & Acceptance Gating (`material_intake/tests.py`)**: Tests 10MB MTC file validation, chemistry range bounds, mechanical property validation, open SNCR blocking, and Quality Manager exclusive batch release.
-- **Dimensional Inspections (`inspection/tests.py`)**: Tests numerical tolerance calculations, `validate_measurement_value` rejection of `NaN`/`Infinity`/overflows, expired gauge measurement lockout, supervisor approval sign-off, and inspector 403 rejection.
-- **Dispatch Clearance Gates (`inspection/tests.py`)**: Tests rejection when raw material is unaccepted or has open SNCRs, rejection when production operations are incomplete or hold times unelapsed, rejection when PDI is failing or unsigned, and successful atomic release by Quality Manager or Plant Manager.
+- **Material Intake & Acceptance Gating (`material_intake/tests.py`)**: Tests 10MB MTC file validation, magic-byte binary signatures (PDF, PNG, JPEG, TIFF), empty-file rejection, chemistry/mechanical conformance, open SNCR blocking, and Quality Manager exclusive batch release with audit trail persistence.
+- **Dimensional Inspections (`inspection/tests.py`)**: Tests numerical tolerance calculations, `validate_measurement_value` rejection of `NaN`/`Infinity`/overflows, expired and inactive gauge lockout at model and form levels, cross-checklist item mismatch rejection, supervisor approval sign-off, post-approval edit locking, and automatic approval reset on failing readings.
+- **Dispatch Clearance Gates (`inspection/tests.py`)**: Tests rejection when raw material is unaccepted or has open SNCRs, rejection when production routing operations are missing or incomplete, rejection when process hold times are unelapsed, rejection when PDI is failing or unsigned, and successful atomic release by Quality Manager or Plant Manager.
 
 ---
 

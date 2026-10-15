@@ -19,9 +19,14 @@
     <!-- Disposition Action Buttons -->
     <div class="flex items-center gap-2">
       {% if batch.status == 'ACCEPTED' %}
-        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold tracking-wide">
-          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          ACCEPTED & RELEASED TO PRODUCTION
+        <div class="flex flex-col sm:items-end">
+          <div class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold tracking-wide">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            ACCEPTED & RELEASED TO PRODUCTION
+          </div>
+          {% if batch.accepted_by %}
+            <span class="text-[10px] text-emerald-400/70 font-mono mt-1">Authorized by: {{ batch.accepted_by.get_full_name|default:batch.accepted_by.username }} &bull; {{ batch.accepted_at|date:"Y-m-d H:i" }}</span>
+          {% endif %}
         </div>
       {% else %}
         {% if can_accept %}

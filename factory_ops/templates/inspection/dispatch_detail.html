@@ -144,17 +144,17 @@
     </div>
 
     <!-- Card 2: Shopfloor Production Operations Routing -->
-    <div class="p-5 rounded-2xl bg-slate-900/60 border {% if ops_complete %}border-emerald-500/30{% elif not ops_exist %}border-slate-700/60{% else %}border-rose-500/30{% endif %} shadow-xl flex flex-col justify-between">
+    <div class="p-5 rounded-2xl bg-slate-900/60 border {% if ops_complete %}border-emerald-500/30{% else %}border-rose-500/30{% endif %} shadow-xl flex flex-col justify-between">
       <div>
         <div class="flex items-center justify-between mb-3">
           <div class="flex items-center gap-2">
-            <span class="w-6 h-6 rounded-lg {% if ops_complete %}bg-emerald-500/20 text-emerald-400 border border-emerald-500/30{% elif not ops_exist %}bg-slate-800 text-slate-400 border border-slate-700{% else %}bg-rose-500/20 text-rose-400 border border-rose-500/30{% endif %} flex items-center justify-center text-xs font-bold font-mono">2</span>
+            <span class="w-6 h-6 rounded-lg {% if ops_complete %}bg-emerald-500/20 text-emerald-400 border border-emerald-500/30{% else %}bg-rose-500/20 text-rose-400 border border-rose-500/30{% endif %} flex items-center justify-center text-xs font-bold font-mono">2</span>
             <span class="text-xs font-bold text-white uppercase tracking-wider font-mono">Production Routing</span>
           </div>
           {% if ops_complete %}
             <span class="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold">ALL COMPLETED</span>
           {% elif not ops_exist %}
-            <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700 text-[10px]">NO ROUTING LOGS</span>
+            <span class="px-2 py-0.5 rounded bg-rose-500/15 text-rose-400 border border-rose-500/30 text-[10px] font-bold">MISSING ROUTING</span>
           {% else %}
             <span class="px-2 py-0.5 rounded bg-amber-500/15 text-amber-300 border border-amber-500/30 text-[10px] font-bold">IN PROGRESS</span>
           {% endif %}
@@ -175,25 +175,27 @@
               </div>
             {% endfor %}
           {% else %}
-            <p class="text-slate-400 py-3">No intermediate operation steps registered for batch {{ dispatch.batch_or_serial_number }}.</p>
+            <p class="text-rose-400 py-3 font-semibold">✗ No manufacturing operations registered for batch {{ dispatch.batch_or_serial_number }}.</p>
           {% endif %}
         </div>
       </div>
       <div class="mt-3 pt-2 border-t border-slate-800/80 text-[11px] text-slate-400">
-        Prerequisite: All manufacturing operations must be marked COMPLETED.
+        Prerequisite: Production operations must be recorded and all marked COMPLETED.
       </div>
     </div>
 
     <!-- Card 3: Process Hold Periods -->
-    <div class="p-5 rounded-2xl bg-slate-900/60 border {% if holds_elapsed or not ops_exist %}border-emerald-500/30{% else %}border-amber-500/30{% endif %} shadow-xl flex flex-col justify-between">
+    <div class="p-5 rounded-2xl bg-slate-900/60 border {% if ops_exist and holds_elapsed %}border-emerald-500/30{% elif not ops_exist %}border-rose-500/30{% else %}border-amber-500/30{% endif %} shadow-xl flex flex-col justify-between">
       <div>
         <div class="flex items-center justify-between mb-3">
           <div class="flex items-center gap-2">
-            <span class="w-6 h-6 rounded-lg {% if holds_elapsed or not ops_exist %}bg-emerald-500/20 text-emerald-400 border border-emerald-500/30{% else %}bg-amber-500/20 text-amber-300 border border-amber-500/30{% endif %} flex items-center justify-center text-xs font-bold font-mono">3</span>
+            <span class="w-6 h-6 rounded-lg {% if ops_exist and holds_elapsed %}bg-emerald-500/20 text-emerald-400 border border-emerald-500/30{% elif not ops_exist %}bg-rose-500/20 text-rose-400 border border-rose-500/30{% else %}bg-amber-500/20 text-amber-300 border border-amber-500/30{% endif %} flex items-center justify-center text-xs font-bold font-mono">3</span>
             <span class="text-xs font-bold text-white uppercase tracking-wider font-mono">Mandatory Hold Periods</span>
           </div>
-          {% if holds_elapsed or not ops_exist %}
+          {% if ops_exist and holds_elapsed %}
             <span class="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold">ELAPSED / SATISFIED</span>
+          {% elif not ops_exist %}
+            <span class="px-2 py-0.5 rounded bg-rose-500/15 text-rose-400 border border-rose-500/30 text-[10px] font-bold">NO OPERATIONS</span>
           {% else %}
             <span class="px-2 py-0.5 rounded bg-amber-500/15 text-amber-300 border border-amber-500/30 text-[10px] font-bold">HOLD ACTIVE</span>
           {% endif %}

@@ -245,12 +245,102 @@ class MaterialIntakeEnforcementTests(TestCase):
         self.assertIn("Invalid file extension", str(ctx.exception))
 
     def test_mtc_document_validator_accepts_valid_documents(self):
-        """PDF, PNG, JPG, JPEG files must pass file validation."""
-        valid_pdf = SimpleUploadedFile("cert.pdf", b"%PDF-1.4 test", content_type="application/pdf")
-        valid_png = SimpleUploadedFile("cert.png", b"png_data", content_type="image/png")
+        """PDF, PNG, JPG, JPEG, TIFF files with valid magic signatures must pass file validation."""
+        valid_pdf = SimpleUploadedFile("cert.pdf", b"%PDF-1.4 valid test certificate", content_type="application/pdf")
+        valid_png = SimpleUploadedFile("cert.png", b"\x89PNG\r\n\x1a\nvalid_png_header_and_data", content_type="image/png")
+        valid_jpg = SimpleUploadedFile("cert.jpg", b"\xff\xd8\xff\xe0valid_jpeg_header_and_data", content_type="image/jpeg")
+        valid_tif = SimpleUploadedFile("cert.tif", b"II*\x00valid_tiff_header_and_data", content_type="image/tiff")
         # Should execute without raising
         validate_mtc_document(valid_pdf)
         validate_mtc_document(valid_png)
+        validate_mtc_document(valid_jpg)
+        validate_mtc_document(valid_tif)
+
+    def test_mtc_document_validator_rejects_empty_file(self):
+        """Zero-byte files must be rejected by validator."""
+        empty_file = SimpleUploadedFile("empty.pdf", b"", content_type="application/pdf")
+        with self.assertRaises(ValidationError) as ctx:
+            validate_mtc_document(empty_file)
+        self.assertIn("empty", str(ctx.exception).lower())
+
+    def test_mtc_document_validator_rejects_spoofed_or_mismatched_content(self):
+        """Files whose byte signatures do not match their extension must be rejected."""
+        spoofed_pdf = SimpleUploadedFile("spoofed.pdf", b"This is plain text, not a PDF header", content_type="application/pdf")
+        with self.assertRaises(ValidationError) as ctx:
+            validate_mtc_document(spoofed_pdf)
+        self.assertIn("signature does not match", str(ctx.exception))
+
+        spoofed_png = SimpleUploadedFile("fake.png", b"Not a PNG image file", content_type="image/png")
+        with self.assertRaises(ValidationError) as ctx:
+            validate_mtc_document(spoofed_png)
+        self.assertIn("signature does not match", str(ctx.exception))
+
+    def test_mtc_document_validator_rejects_oversized_files(self):
+        """Files exceeding 10MB must be rejected."""
+        oversized = SimpleUploadedFile("huge.pdf", b"%PDF-" + b"0" * (10 * 1024 * 1024 + 64), content_type="application/pdf")
+        with self.assertRaises(ValidationError) as ctx:
+            validate_mtc_document(oversized)
+        self.assertIn("exceeds maximum allowed limit", str(ctx.exception))
+
+    def test_batch_acceptance_records_audit_trail(self):
+        """Authorizing acceptance records accepted_by and accepted_at timestamp."""
+        self.batch.mtc_document = SimpleUploadedFile("cert.pdf", b"%PDF-1.4 valid certificate", content_type="application/pdf")
+        self.batch.save()
+
+        ChemicalComposition.objects.update_or_create(
+            batch=self.batch,
+            defaults={
+                'carbon': 0.40, 'manganese': 0.80, 'silicon': 0.25,
+                'is_composition_ok': True, 'verified_at': timezone.now(), 'verified_by': 'Dr. Metal'
+            }
+        )
+
+        MechanicalProperties.objects.update_or_create(
+            batch=self.batch,
+            defaults={
+                'tensile_strength': 850.0, 'yield_strength': 650.0, 'elongation': 15.0, 'hardness': 28.0,
+                'is_properties_ok': True, 'verified_at': timezone.now(), 'verified_by': 'Dr. Metal'
+            }
+        )
+
+        self.client.login(username="qm_user", password=self.password)
+        url = reverse('material_intake:batch_detail', args=[self.batch.id])
+        res = self.client.post(url, {'action': 'accept_batch'})
+        self.assertEqual(res.status_code, 302)
+
+        self.batch.refresh_from_db()
+        self.assertEqual(self.batch.status, 'ACCEPTED')
+        self.assertEqual(self.batch.accepted_by.username, 'qm_user')
+        self.assertIsNotNone(self.batch.accepted_at)
+
+    def test_batch_clean_prevents_acceptance_with_unresolved_sncr(self):
+        """Batch model clean() prevents setting status to ACCEPTED when an unresolved SNCR exists."""
+        self.batch.mtc_document = SimpleUploadedFile("cert.pdf", b"%PDF-1.4 valid certificate", content_type="application/pdf")
+        self.batch.save()
+
+        ChemicalComposition.objects.update_or_create(
+            batch=self.batch,
+            defaults={'carbon': 0.40, 'manganese': 0.80, 'silicon': 0.25, 'is_composition_ok': True, 'verified_at': timezone.now(), 'verified_by': 'Dr. Metal'}
+        )
+        MechanicalProperties.objects.update_or_create(
+            batch=self.batch,
+            defaults={'tensile_strength': 850.0, 'yield_strength': 650.0, 'elongation': 15.0, 'hardness': 28.0, 'is_properties_ok': True, 'verified_at': timezone.now(), 'verified_by': 'Dr. Metal'}
+        )
+
+        # Add unresolved SNCR
+        SupplierNonConformance.objects.create(
+            batch=self.batch,
+            report_number="SNCR-REGRESS-01",
+            severity="CRITICAL",
+            defect_category="Surface Cracks",
+            reason="Cracks observed during ultrasonic test",
+            is_resolved=False
+        )
+
+        self.batch.status = 'ACCEPTED'
+        with self.assertRaises(ValidationError) as ctx:
+            self.batch.clean()
+        self.assertIn("unresolved Supplier Non-Conformance Report", str(ctx.exception))
 
     # 8. Numeric Validators & Form Cleaning
     def test_chemical_composition_form_requires_verifier_when_marked_ok(self):

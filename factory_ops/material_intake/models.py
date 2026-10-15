@@ -1,5 +1,7 @@
 from django.db import models
 from django.utils import timezone
+from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
 from master_setup.models import Part
 from .validators import validate_mtc_document, validate_percentage, validate_positive_finite
 
@@ -32,6 +34,12 @@ class MaterialBatch(models.Model):
     )
     dock_inspector = models.CharField(max_length=100, blank=True, help_text="Person who logged the physical delivery")
     notes = models.TextField(blank=True, help_text="Visual inspection notes (packaging, rust, damage)")
+    accepted_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='accepted_material_batches',
+        help_text="Quality Manager who authorized batch acceptance"
+    )
+    accepted_at = models.DateTimeField(null=True, blank=True, help_text="Timestamp when batch acceptance was authorized")
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -41,6 +49,13 @@ class MaterialBatch(models.Model):
 
     def __str__(self):
         return f"Heat# {self.heat_number} ({self.material_grade}) — {self.supplier_name}"
+
+    def clean(self):
+        super().clean()
+        if self.status == 'ACCEPTED':
+            blockers = self.get_acceptance_blockers()
+            if blockers:
+                raise ValidationError(f"Batch cannot be marked ACCEPTED while blockers remain: {'; '.join(blockers)}")
 
     def get_acceptance_blockers(self):
         """

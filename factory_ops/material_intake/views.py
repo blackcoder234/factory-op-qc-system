@@ -134,8 +134,10 @@ def batch_detail(request, batch_id):
                 return redirect('material_intake:batch_detail', batch_id=batch.id)
 
             batch.status = 'ACCEPTED'
+            batch.accepted_by = request.user
+            batch.accepted_at = timezone.now()
             batch.save()
-            messages.success(request, f'Batch {batch.heat_number} successfully ACCEPTED and released to production!')
+            messages.success(request, f'Batch {batch.heat_number} successfully ACCEPTED and released to production by {request.user.get_full_name() or request.user.username}!')
             return redirect('material_intake:batch_detail', batch_id=batch.id)
 
         elif action == 'quarantine_batch':
@@ -143,6 +145,8 @@ def batch_detail(request, batch_id):
                 raise PermissionDenied("Access Denied: Only Quality Engineers or Quality Managers can quarantine material.")
 
             batch.status = 'QUARANTINED'
+            batch.accepted_by = None
+            batch.accepted_at = None
             batch.save()
             messages.warning(request, f'Batch {batch.heat_number} marked as QUARANTINED in quality hold!')
             return redirect('material_intake:raise_sncr', batch_id=batch.id)

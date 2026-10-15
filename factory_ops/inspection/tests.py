@@ -261,6 +261,90 @@ class QualityControlEnforcementTests(TestCase):
         response = self.client.post(url, {'action': 'approve_record'})
         self.assertEqual(response.status_code, 403)
 
+    def test_measurement_reading_rejects_cross_checklist_item(self):
+        """Measurement reading must reject checklist item belonging to a different checklist."""
+        other_part = Part.objects.create(part_number="PART-999", name="Flange")
+        other_checklist = InspectionChecklist.objects.create(name="Flange PDI", part=other_part, checklist_type="PDI")
+        other_item = ChecklistItem.objects.create(
+            checklist=other_checklist, sequence_number=1, characteristic_name="Flange OD",
+            nominal_value=150.0, tolerance_plus=0.1, tolerance_minus=0.1
+        )
+        record = InspectionRecord.objects.create(
+            checklist=self.checklist, machine=self.machine_op,
+            batch_or_serial_number="B-CROSS-01", inspector_name="Test Inspector"
+        )
+        with self.assertRaises(ValidationError) as ctx:
+            MeasurementReading.objects.create(
+                record=record, checklist_item=other_item, actual_value=150.0, used_gauge=self.gauge_valid
+            )
+        self.assertIn("belongs to checklist", str(ctx.exception))
+
+    def test_measurement_reading_rejects_expired_gauge_at_model_level(self):
+        """Model-level clean() rejects saving measurement reading with expired gauge."""
+        record = InspectionRecord.objects.create(
+            checklist=self.checklist, machine=self.machine_op,
+            batch_or_serial_number="B-EXP-01", inspector_name="Test Inspector"
+        )
+        with self.assertRaises(ValidationError) as ctx:
+            MeasurementReading.objects.create(
+                record=record, checklist_item=self.item, actual_value=50.010, used_gauge=self.gauge_expired
+            )
+        self.assertIn("EXPIRED", str(ctx.exception))
+
+    def test_approved_inspection_session_locks_measurement_modifications(self):
+        """Once an inspection session is approved by supervisor, measurement readings cannot be added or edited."""
+        record = InspectionRecord.objects.create(
+            checklist=self.checklist, machine=self.machine_op,
+            batch_or_serial_number="B-LOCK-01", inspector_name="Operator"
+        )
+        reading = MeasurementReading.objects.create(
+            record=record, checklist_item=self.item, actual_value=50.010, used_gauge=self.gauge_valid
+        )
+        # Supervisor approves
+        record.review_status = 'APPROVED'
+        record.reviewed_by = 'supervisor_test'
+        record.reviewed_at = timezone.now()
+        record.save()
+
+        # Attempt to edit reading via ORM
+        reading.actual_value = 50.018
+        with self.assertRaises(ValidationError) as ctx:
+            reading.save()
+        self.assertIn("locked against measurement modifications", str(ctx.exception))
+
+        # Attempt to edit reading via HTTP POST
+        url = reverse('inspection:record_detail', kwargs={'record_id': record.id})
+        response = self.client.post(url, {
+            'action': 'save_reading',
+            'item_id': self.item.id,
+            'actual_value': '50.018',
+            'gauge_id': self.gauge_valid.id
+        }, follow=True)
+        self.assertContains(response, 'locked by supervisor')
+
+    def test_update_overall_status_resets_approved_status_if_reading_fails(self):
+        """If an approved record's overall status changes to FAILED, approval status is reset to PENDING."""
+        record = InspectionRecord.objects.create(
+            checklist=self.checklist, machine=self.machine_op,
+            batch_or_serial_number="B-RESET-01", inspector_name="Operator"
+        )
+        reading = MeasurementReading.objects.create(
+            record=record, checklist_item=self.item, actual_value=50.010, used_gauge=self.gauge_valid
+        )
+        record.review_status = 'APPROVED'
+        record.reviewed_by = 'supervisor_test'
+        record.reviewed_at = timezone.now()
+        record.save()
+
+        # Force a failing reading in database directly
+        MeasurementReading.objects.filter(id=reading.id).update(actual_value=999.0, result='FAIL')
+        record.update_overall_status()
+
+        record.refresh_from_db()
+        self.assertEqual(record.overall_status, 'FAILED')
+        self.assertEqual(record.review_status, 'PENDING')
+        self.assertEqual(record.reviewed_by, '')
+
     def test_supervisor_can_reject_failing_inspection(self):
         """Shift Supervisor can formally reject an out-of-spec inspection session."""
         self.client.force_login(self.supervisor)
@@ -341,12 +425,15 @@ class DispatchClearanceQualityGateTests(TestCase):
         self.pdi_passed = InspectionRecord.objects.create(
             checklist=self.checklist, machine=self.machine,
             batch_or_serial_number="BATCH-DISP-01", inspector_name="Test Inspector",
-            overall_status="PASSED", review_status="APPROVED",
-            reviewed_by="test_supervisor", reviewed_at=timezone.now()
+            overall_status="PASSED", review_status="PENDING",
         )
         MeasurementReading.objects.create(
             record=self.pdi_passed, checklist_item=self.item, actual_value=50.010, used_gauge=self.gauge
         )
+        self.pdi_passed.review_status = "APPROVED"
+        self.pdi_passed.reviewed_by = "test_supervisor"
+        self.pdi_passed.reviewed_at = timezone.now()
+        self.pdi_passed.save()
 
         # PDI Record (FAILED)
         self.pdi_failed = InspectionRecord.objects.create(
@@ -357,6 +444,30 @@ class DispatchClearanceQualityGateTests(TestCase):
         MeasurementReading.objects.create(
             record=self.pdi_failed, checklist_item=self.item, actual_value=50.080, used_gauge=self.gauge
         )
+
+        # Completed production operations for BATCH-DISP-01
+        ProductionOperation.objects.create(
+            batch_number="BATCH-DISP-01",
+            sequence_number=10,
+            part=self.part,
+            operation_name="Turning & Facing",
+            status="COMPLETED"
+        )
+
+    def test_dispatch_blocked_when_production_operations_missing(self):
+        """Dispatch is blocked if no manufacturing operations are recorded for the batch."""
+        dispatch = DispatchClearance.objects.create(
+            dispatch_order_number="DSP-TEST-NO-OPS",
+            part=self.part,
+            batch_or_serial_number="BATCH-WITHOUT-OPS",
+            material_batch=self.material_accepted,
+            inspection_record=self.pdi_passed,
+            quantity=10,
+            destination="Customer Hub"
+        )
+        blockers = dispatch.get_clearance_blockers()
+        self.assertFalse(dispatch.can_be_cleared)
+        self.assertTrue(any("Routing Traceability Gap" in b for b in blockers))
 
     def test_dispatch_blocked_without_material_batch(self):
         """Dispatch order without raw material linkage cannot be cleared."""
@@ -534,12 +645,15 @@ class DispatchClearanceQualityGateTests(TestCase):
         pdi_ok = InspectionRecord.objects.create(
             checklist=self.checklist, machine=self.machine,
             batch_or_serial_number="BATCH-DISP-OK", inspector_name="Test Inspector",
-            overall_status="PASSED", review_status="APPROVED",
-            reviewed_by="test_supervisor", reviewed_at=timezone.now()
+            overall_status="PASSED", review_status="PENDING",
         )
         MeasurementReading.objects.create(
             record=pdi_ok, checklist_item=self.item, actual_value=50.010, used_gauge=self.gauge
         )
+        pdi_ok.review_status = "APPROVED"
+        pdi_ok.reviewed_by = "test_supervisor"
+        pdi_ok.reviewed_at = timezone.now()
+        pdi_ok.save()
 
         dispatch = DispatchClearance.objects.create(
             dispatch_order_number="DSP-TEST-008",
