@@ -230,9 +230,9 @@ python manage.py migrate
 ### 7. Populate Realistic Factory Demo Data
 Populates plant departments, CNC machines, precision gauges, steel heats, PDI inspection sessions, production operations, and dispatch clearance records:
 ```bash
-python manage.py seed_data --admin-password YourSecurePassword123!
+python manage.py seed_data --admin-password ApexQC#2026
 ```
-*Note: This command provisions the 5 standard operational roles, creates the `supervisor` user, and sets up realistic simulated shopfloor records.*
+*Note: This command provisions the 5 standard operational roles, sets up realistic simulated shopfloor records, and configures the standard evaluation test accounts (`supervisor`, `amarnath`, `inspector`, `engineer`, `plant_manager` with default password `ApexQC#2026` as detailed in `.env.example`).*
 
 ### 8. Run the Development Server
 ```bash

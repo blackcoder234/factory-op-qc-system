@@ -48,33 +48,38 @@ class Command(BaseCommand):
             groups[role_name] = grp
         self.stdout.write(self.style.SUCCESS(f"[OK] Verified 5 operational role groups: {', '.join(ALL_ROLES)}"))
 
-        # 0. OPERATOR & SUPERVISOR USERS (No hardcoded passwords in version control)
-        admin_pwd = options.get('admin_password') or os.environ.get('SEED_ADMIN_PASSWORD')
+        # 0. OPERATOR & SUPERVISOR USERS (Intentionally configured for evaluation & testing)
+        admin_pwd = options.get('admin_password') or os.environ.get('SEED_ADMIN_PASSWORD') or os.environ.get('DEMO_ACCOUNTS_PASSWORD') or "ApexQC#2026"
 
-        supervisor, sup_created = User.objects.get_or_create(
-            username="supervisor",
-            defaults={
-                "email": "supervisor@apexprecision.com",
-                "first_name": "Amarnath",
-                "last_name": "Bera (Lead)",
-                "is_staff": True,
-                "is_superuser": True,
-            }
-        )
+        demo_users_data = [
+            ("supervisor", "supervisor@apexprecision.com", "Amarnath", "Bera (Shift Lead)", True, True, [ROLE_SHIFT_SUPERVISOR, ROLE_QUALITY_MANAGER]),
+            ("amarnath", "amarnath@apexprecision.com", "Amarnath", "Bera (Lead Admin)", True, True, [ROLE_SHIFT_SUPERVISOR, ROLE_QUALITY_MANAGER]),
+            ("inspector", "inspector@apexprecision.com", "Vikram", "Rao (Floor Inspector)", True, False, [ROLE_QA_INSPECTOR]),
+            ("engineer", "engineer@apexprecision.com", "Neha", "Sharma (QC Engineer)", True, False, [ROLE_QUALITY_ENGINEER]),
+            ("plant_manager", "plant_manager@apexprecision.com", "Col.", "S. Verma (Plant Director)", True, False, [ROLE_PLANT_MANAGER, ROLE_QUALITY_MANAGER]),
+        ]
 
-        if admin_pwd:
-            supervisor.set_password(admin_pwd)
-            supervisor.save()
-            self.stdout.write(self.style.SUCCESS("[OK] Supervisor account password configured from environment/argument."))
-        elif sup_created or not supervisor.has_usable_password():
-            supervisor.set_password("ApexQC#2026")  # Local default if explicitly running seed command
-            supervisor.save()
-            self.stdout.write(self.style.WARNING(
-                "[SECURITY] Supervisor created. Use 'python manage.py changepassword supervisor' or 'createsuperuser' for production."
-            ))
-
-        # Assign supervisor to Shift Supervisor and Quality Manager groups
-        supervisor.groups.add(groups[ROLE_SHIFT_SUPERVISOR], groups[ROLE_QUALITY_MANAGER])
+        for uname, email, fname, lname, is_stf, is_super, role_list in demo_users_data:
+            u, _ = User.objects.get_or_create(
+                username=uname,
+                defaults={
+                    "email": email,
+                    "first_name": fname,
+                    "last_name": lname,
+                    "is_staff": is_stf,
+                    "is_superuser": is_super,
+                }
+            )
+            u.first_name = fname
+            u.last_name = lname
+            u.is_staff = is_stf
+            u.is_superuser = is_super
+            u.set_password(admin_pwd)
+            u.save()
+            u.groups.clear()
+            for r in role_list:
+                u.groups.add(groups[r])
+            self.stdout.write(self.style.SUCCESS(f"[OK] Demo persona configured: '{uname}' ({fname} {lname}) -> Roles: {role_list}"))
 
         # 1. DEPARTMENTS
         dept_machining, _ = Department.objects.get_or_create(
