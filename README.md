@@ -3,6 +3,7 @@
 # 🏭 Factory Operations & Quality Control System (FactoryOps QC)
 
 ### Enterprise Shopfloor Quality Assurance & Zero-Escape Interlock Safety Platform
+
 Built for **Zapuza Technologies LLP** — Python Django Developer Internship Assessment  
 Facility: **Apex Precision Dynamics Ltd. — Plant APX-09**
 
@@ -12,6 +13,7 @@ Facility: **Apex Precision Dynamics Ltd. — Plant APX-09**
 [![Tests](https://img.shields.io/badge/Tests-49%20Passed%20%E2%9C%93-emerald?style=for-the-badge)](#-automated-testing-suite)
 [![Security](https://img.shields.io/badge/Security-RBAC%20%26%20Zero--Escape-blue?style=for-the-badge)](#-security--production-hardening)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
+[![Video Demo](https://img.shields.io/badge/Video_Demo-Watch_Walkthrough-red?style=for-the-badge&logo=youtube&logoColor=white)](https://youtu.be/REPLACE_WITH_YOUR_VIDEO_ID)
 
 </div>
 
@@ -19,9 +21,23 @@ Facility: **Apex Precision Dynamics Ltd. — Plant APX-09**
 
 ## 📌 Executive Summary
 
-In precision mechanical manufacturing facilities, paper logbooks and manual inspection checklists lead to quality escapes, overdue machine tool operations, and untraceable metallurgical deviations. 
+In precision mechanical manufacturing facilities, paper logbooks and manual inspection checklists lead to quality escapes, overdue machine tool operations, and untraceable metallurgical deviations.
 
 **FactoryOps QC** digitizes the shopfloor manufacturing quality lifecycle into a unified, audit-compliant web application. Built for **Apex Precision Dynamics (Plant APX-09)**, the platform replaces manual tracking with server-side enforced digital quality gates, strict role-based access control (RBAC), instrument calibration tracking, and an atomic zero-escape dispatch clearance workflow architected around ISO 9001 quality management principles.
+
+---
+
+## 🎥 Video Demonstration & Walkthrough
+
+> 📺 **Video Demonstration:**  
+> **[▶ Watch the Project Walkthrough and Code Explanation Here](https://youtu.be/REPLACE_WITH_YOUR_VIDEO_ID)**
+>
+> **Direct Video URL:** `https://youtu.be/REPLACE_WITH_YOUR_VIDEO_ID`  
+> _(Note: Replace `https://youtu.be/REPLACE_WITH_YOUR_VIDEO_ID` with your final YouTube / Loom / Google Drive link after recording)._
+>
+> _A comprehensive 5-minute technical walkthrough covering: system architecture, role-based access control (RBAC), machine safety interlocks, MTC metallurgical gating with binary file signature verification, live dimensional measurement logging, zero-escape dispatch clearance, and test suite execution._
+>
+> _For the complete scene-by-scene script and voiceover guide, see [DEMO_RECORDING_SCRIPT_AND_WALKTHROUGH.md](docs/DEMO_RECORDING_SCRIPT_AND_WALKTHROUGH.md)._
 
 ---
 
@@ -74,26 +90,26 @@ In precision mechanical manufacturing facilities, paper logbooks and manual insp
 
 The application implements a 5-role operational hierarchy enforced at the server level via Django Groups and custom view decorators (`@role_required` and `check_action_permission`). Unauthorized actions are rejected with HTTP 403 Forbidden pages:
 
-| Operational Role | Typical Persona | Permissions & Operational Scope |
-|---|---|---|
-| **Plant / General Manager** | Plant Director | Full plant oversight, workstation lock management, and final shipping dispatch clearance release authority. |
-| **Quality Engineer** | Metrology Engineer | Setup management, MTC document & metallurgical verification, checklist template creation, and dimensional measurement entry. |
-| **Quality Manager** | Head of Quality Assurance | Unrestricted quality authority: material batch release acceptance, checklist authoring, inspection sign-off, and final dispatch clearance. |
-| **Shift Supervisor** | Shopfloor Lead | Workstation lockout/release, maintenance logging, inspection session creation, and supervisor sign-off approval. |
-| **QA Floor Inspector** | Receiving & Floor Inspector | Inward material dock logging, starting inspection sessions, and recording physical dimensional readings. Blocked from approving or clearing dispatches. |
+| Operational Role            | Typical Persona             | Permissions & Operational Scope                                                                                                                         |
+| --------------------------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Plant / General Manager** | Plant Director              | Full plant oversight, workstation lock management, and final shipping dispatch clearance release authority.                                             |
+| **Quality Engineer**        | Metrology Engineer          | Setup management, MTC document & metallurgical verification, checklist template creation, and dimensional measurement entry.                            |
+| **Quality Manager**         | Head of Quality Assurance   | Unrestricted quality authority: material batch release acceptance, checklist authoring, inspection sign-off, and final dispatch clearance.              |
+| **Shift Supervisor**        | Shopfloor Lead              | Workstation lockout/release, maintenance logging, inspection session creation, and supervisor sign-off approval.                                        |
+| **QA Floor Inspector**      | Receiving & Floor Inspector | Inward material dock logging, starting inspection sessions, and recording physical dimensional readings. Blocked from approving or clearing dispatches. |
 
 ### Server-Side Permission Matrix
 
-| Action / Endpoint | Floor Inspector | Shift Supervisor | Quality Engineer | Quality Manager | Plant Manager |
-|---|:---:|:---:|:---:|:---:|:---:|
-| **Dock Material Intake** | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **Verify MTC Chemistry/Mechanics** | ❌ | ❌ | ✅ | ✅ | ❌ |
-| **Accept Material Batch Gate** | ❌ | ❌ | ❌ | ✅ | ❌ |
-| **Lock / Unlock Workstations** | ❌ | ✅ | ❌ | ✅ | ✅ |
-| **Create Checklist Templates** | ❌ | ❌ | ✅ | ✅ | ❌ |
-| **Enter Dimensional Measurements** | ✅ | ❌ | ✅ | ✅ | ❌ |
-| **Approve / Sign Off Inspection** | ❌ | ✅ | ❌ | ✅ | ❌ |
-| **Authorize Dispatch Clearance** | ❌ | ❌ | ❌ | ✅ | ✅ |
+| Action / Endpoint                  | Floor Inspector | Shift Supervisor | Quality Engineer | Quality Manager | Plant Manager |
+| ---------------------------------- | :-------------: | :--------------: | :--------------: | :-------------: | :-----------: |
+| **Dock Material Intake**           |       ✅        |        ✅        |        ✅        |       ✅        |      ✅       |
+| **Verify MTC Chemistry/Mechanics** |       ❌        |        ❌        |        ✅        |       ✅        |      ❌       |
+| **Accept Material Batch Gate**     |       ❌        |        ❌        |        ❌        |       ✅        |      ❌       |
+| **Lock / Unlock Workstations**     |       ❌        |        ✅        |        ❌        |       ✅        |      ✅       |
+| **Create Checklist Templates**     |       ❌        |        ❌        |        ✅        |       ✅        |      ❌       |
+| **Enter Dimensional Measurements** |       ✅        |        ❌        |        ✅        |       ✅        |      ❌       |
+| **Approve / Sign Off Inspection**  |       ❌        |        ✅        |        ❌        |       ✅        |      ❌       |
+| **Authorize Dispatch Clearance**   |       ❌        |        ❌        |        ❌        |       ✅        |      ✅       |
 
 ---
 
@@ -168,31 +184,34 @@ factory-op-qc-system/
 
 ## 🛠️ Technology Stack
 
-| Layer | Technology | Details & Rationale |
-|---|---|---|
-| **Backend Framework** | **Python 3.10+ / Django 5.2** | Battery-packed ORM, secure authentication, CSRF protection, and migration engine |
-| **Styling & Design** | **Tailwind CSS v4 + Vanilla CSS** | Custom dark industrial design system with emerald/rose status semantics |
-| **Typography** | **Plus Jakarta Sans & JetBrains Mono** | High-contrast monospace fonts for tolerances, heat numbers, and readings |
-| **Database** | **SQLite (Dev) / PostgreSQL Ready** | Multi-table relational integrity with atomic transactions and row-level locking |
-| **File Storage** | **Django FileField** | Validated, hashed storage for supplier Mill Test Certificates (PDF/images) |
-| **Environment** | **python-dotenv** | Explicit environment variable separation for zero credentials in git |
+| Layer                 | Technology                             | Details & Rationale                                                              |
+| --------------------- | -------------------------------------- | -------------------------------------------------------------------------------- |
+| **Backend Framework** | **Python 3.10+ / Django 5.2**          | Battery-packed ORM, secure authentication, CSRF protection, and migration engine |
+| **Styling & Design**  | **Tailwind CSS v4 + Vanilla CSS**      | Custom dark industrial design system with emerald/rose status semantics          |
+| **Typography**        | **Plus Jakarta Sans & JetBrains Mono** | High-contrast monospace fonts for tolerances, heat numbers, and readings         |
+| **Database**          | **SQLite (Dev) / PostgreSQL Ready**    | Multi-table relational integrity with atomic transactions and row-level locking  |
+| **File Storage**      | **Django FileField**                   | Validated, hashed storage for supplier Mill Test Certificates (PDF/images)       |
+| **Environment**       | **python-dotenv**                      | Explicit environment variable separation for zero credentials in git             |
 
 ---
 
 ## 🚀 Local Setup & Installation
 
 ### 1. Prerequisites
-* **Python 3.10** or higher
-* **Git**
-* **Node.js 18+** *(optional, only if recompiling Tailwind CSS)*
+
+- **Python 3.10** or higher
+- **Git**
+- **Node.js 18+** _(optional, only if recompiling Tailwind CSS)_
 
 ### 2. Clone the Repository
+
 ```bash
 git clone https://github.com/blackcoder234/factory-op-qc-system.git
 cd factory-op-qc-system
 ```
 
 ### 3. Create & Activate Virtual Environment
+
 ```bash
 # Windows (PowerShell)
 python -m venv .venv
@@ -204,16 +223,21 @@ source .venv/bin/activate
 ```
 
 ### 4. Install Dependencies
+
 ```bash
 pip install -r requirements.txt
 ```
 
 ### 5. Configure Environment Variables
+
 Copy the template configuration file:
+
 ```bash
 cp factory_ops/.env.example factory_ops/.env
 ```
+
 Edit `factory_ops/.env`:
+
 ```env
 SECRET_KEY=generate-a-secure-random-key-here
 DEBUG=True
@@ -222,30 +246,36 @@ SEED_ADMIN_PASSWORD=YourSecurePassword123!
 ```
 
 ### 6. Apply Database Migrations
+
 ```bash
 cd factory_ops
 python manage.py migrate
 ```
 
 ### 7. Populate Realistic Factory Demo Data
+
 Populates plant departments, CNC machines, precision gauges, steel heats, PDI inspection sessions, production operations, and dispatch clearance records:
+
 ```bash
 python manage.py seed_data --admin-password ApexQC#2026
 ```
-*Note: This command provisions the 5 standard operational roles, sets up realistic simulated shopfloor records, and configures the standard evaluation test accounts (`supervisor`, `amarnath`, `inspector`, `engineer`, `plant_manager` with default password `ApexQC#2026` as detailed in `.env.example`).*
+
+_Note: This command provisions the 5 standard operational roles, sets up realistic simulated shopfloor records, and configures the standard evaluation test accounts (`supervisor`, `amarnath`, `inspector`, `engineer`, `plant_manager` with default password `ApexQC#2026` as detailed in `.env.example`)._
 
 ### 8. Run the Development Server
+
 ```bash
 python manage.py runserver
 ```
 
 Open your browser:
-* **Plant Overview Dashboard:** [http://127.0.0.1:8000/dashboard/](http://127.0.0.1:8000/dashboard/)
-* **Workstation Lock Board:** [http://127.0.0.1:8000/calibration/](http://127.0.0.1:8000/calibration/)
-* **Raw Material Intake & MTC:** [http://127.0.0.1:8000/materials/](http://127.0.0.1:8000/materials/)
-* **Quality Inspections (PDI):** [http://127.0.0.1:8000/inspection/records/](http://127.0.0.1:8000/inspection/records/)
-* **Dispatch Clearance Gate:** [http://127.0.0.1:8000/inspection/dispatch/](http://127.0.0.1:8000/inspection/dispatch/)
-* **Django Admin Panel:** [http://127.0.0.1:8000/admin/](http://127.0.0.1:8000/admin/)
+
+- **Plant Overview Dashboard:** [http://127.0.0.1:8000/dashboard/](http://127.0.0.1:8000/dashboard/)
+- **Workstation Lock Board:** [http://127.0.0.1:8000/calibration/](http://127.0.0.1:8000/calibration/)
+- **Raw Material Intake & MTC:** [http://127.0.0.1:8000/materials/](http://127.0.0.1:8000/materials/)
+- **Quality Inspections (PDI):** [http://127.0.0.1:8000/inspection/records/](http://127.0.0.1:8000/inspection/records/)
+- **Dispatch Clearance Gate:** [http://127.0.0.1:8000/inspection/dispatch/](http://127.0.0.1:8000/inspection/dispatch/)
+- **Django Admin Panel:** [http://127.0.0.1:8000/admin/](http://127.0.0.1:8000/admin/)
 
 ---
 
@@ -259,6 +289,7 @@ python manage.py test
 ```
 
 ### Test Suite Execution Output
+
 ```text
 Creating test database for alias 'default'...
 Found 49 test(s).
@@ -272,6 +303,7 @@ Destroying test database for alias 'default'...
 ```
 
 ### Test Coverage Highlights
+
 - **Authentication & RBAC (`master_setup/tests.py`)**: Tests login redirects, CSRF-protected POST logout, group role assignments, and 403 Forbidden enforcement on restricted endpoints.
 - **Workstation Safety Interlocks (`calibration/tests.py`)**: Tests automated overdue PM detection, workstation lock toggles, and role permission validation for equipment release.
 - **Material Intake & Acceptance Gating (`material_intake/tests.py`)**: Tests 10MB MTC file validation, magic-byte binary signatures (PDF, PNG, JPEG, TIFF), empty-file rejection, chemistry/mechanical conformance, open SNCR blocking, and Quality Manager exclusive batch release with audit trail persistence.
@@ -294,10 +326,11 @@ npm run build:css
 
 ## 👤 Author & Assessment Submission
 
-* **Candidate:** [Amarnath Bera](https://amarnathbera.in)
-* **Email:** [beraamarnath5@gmail.com](mailto:beraamarnath5@gmail.com)
-* **GitHub:** [@blackcoder234](https://github.com/blackcoder234)
-* **Repository:** [https://github.com/blackcoder234/factory-op-qc-system](https://github.com/blackcoder234/factory-op-qc-system)
+- **Candidate:** [Amarnath Bera](https://amarnathbera.in)
+- **Email:** [beraamarnath5@gmail.com](mailto:beraamarnath5@gmail.com)
+- **GitHub:** [@blackcoder234](https://github.com/blackcoder234)
+- **Repository:** [https://github.com/blackcoder234/factory-op-qc-system](https://github.com/blackcoder234/factory-op-qc-system)
+- **Demo Video:** [https://youtu.be/REPLACE_WITH_YOUR_VIDEO_ID](https://youtu.be/REPLACE_WITH_YOUR_VIDEO_ID)
 
 ---
 
