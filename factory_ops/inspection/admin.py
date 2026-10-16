@@ -1,5 +1,8 @@
 from django.contrib import admin
-from .models import InspectionChecklist, ChecklistItem, InspectionRecord, MeasurementReading
+from .models import (
+    InspectionChecklist, ChecklistItem, InspectionRecord, MeasurementReading,
+    ProductionOperation, DispatchClearance
+)
 
 class ChecklistItemInline(admin.TabularInline):
     model = ChecklistItem
@@ -35,3 +38,15 @@ class MeasurementReadingAdmin(admin.ModelAdmin):
     list_display = ('record', 'checklist_item', 'actual_value', 'deviation', 'result', 'used_gauge')
     list_filter = ('result',)
     search_fields = ('record__batch_or_serial_number', 'checklist_item__characteristic_name')
+
+@admin.register(ProductionOperation)
+class ProductionOperationAdmin(admin.ModelAdmin):
+    list_display = ('batch_number', 'sequence_number', 'part', 'operation_name', 'machine', 'status', 'hold_duration_hours', 'completed_at')
+    list_filter = ('status', 'part')
+    search_fields = ('batch_number', 'operation_name')
+
+@admin.register(DispatchClearance)
+class DispatchClearanceAdmin(admin.ModelAdmin):
+    list_display = ('dispatch_order_number', 'part', 'batch_or_serial_number', 'status', 'quantity', 'destination', 'cleared_by', 'cleared_at')
+    list_filter = ('status', 'part')
+    search_fields = ('dispatch_order_number', 'batch_or_serial_number', 'destination')
