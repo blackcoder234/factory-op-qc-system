@@ -44,11 +44,23 @@
     <form method="post" class="space-y-4 mt-6">
       {% csrf_token %}
 
+      {% if form.errors %}
+      <div class="p-3 rounded-lg bg-rose-950/40 border border-rose-500/40 text-xs text-rose-300">
+        <ul class="list-disc list-inside space-y-1">
+          {% for field, errors in form.errors.items %}
+            <li><strong>{{ field }}:</strong> {{ errors|join:", " }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+
       {% if not lock_obj.is_locked %}
         <div>
           <label class="block text-xs font-semibold text-slate-300 mb-1">Reason for Lock</label>
           {{ form.reason_code }}
         </div>
+      {% else %}
+        <input type="hidden" name="reason_code" value="{{ lock_obj.reason_code|default:'MANUAL_SUPERVISOR' }}">
       {% endif %}
 
       <div>

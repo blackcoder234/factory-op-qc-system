@@ -157,6 +157,23 @@ class AuthenticationAndRBACTests(TestCase):
         lock_obj.refresh_from_db()
         self.assertFalse(lock_obj.is_locked)
 
+        # Re-lock and test unlock without reason_code (browser unlock form)
+        self.client.post(url, {
+            'reason_code': 'MANUAL_SUPERVISOR',
+            'reason_details': 'Precautionary lock',
+            'supervisor_name': 'Sarah',
+        })
+        lock_obj.refresh_from_db()
+        self.assertTrue(lock_obj.is_locked)
+
+        res_browser_unlock = self.client.post(url, {
+            'reason_details': 'Supervisor quality clearance check.',
+            'supervisor_name': 'Amarnath Bera (Shift Lead)',
+        })
+        self.assertRedirects(res_browser_unlock, reverse('calibration:machine_lock_list'))
+        lock_obj.refresh_from_db()
+        self.assertFalse(lock_obj.is_locked)
+
     # 5. Material Acceptance Role Enforcement
     def test_inspector_cannot_accept_material_batch(self):
         """A QA Floor Inspector cannot authorize batch acceptance or release to production."""

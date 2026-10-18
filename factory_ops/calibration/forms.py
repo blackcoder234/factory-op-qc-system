@@ -18,13 +18,16 @@ class MaintenanceRecordForm(forms.ModelForm):
 class WorkstationLockToggleForm(forms.Form):
     reason_code = forms.ChoiceField(
         choices=WorkstationLock.LOCK_REASONS,
+        required=False,
         widget=forms.Select(attrs={'class': 'w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-rose-500 text-sm'})
     )
     reason_details = forms.CharField(
+        required=False,
         widget=forms.Textarea(attrs={'class': 'w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-rose-500 text-sm', 'rows': 2}),
         help_text="Provide justification for locking or releasing this machine"
     )
     supervisor_name = forms.CharField(
         max_length=100,
+        required=False,
         widget=forms.TextInput(attrs={'class': 'w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-rose-500 text-sm', 'placeholder': 'e.g. Supervisor Name'})
     )

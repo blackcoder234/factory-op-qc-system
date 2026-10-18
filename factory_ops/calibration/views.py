@@ -53,9 +53,9 @@ def toggle_lock(request, machine_id):
             # Use authenticated user identity for tamper-proof audit trail
             authenticated_user_name = request.user.get_full_name() or request.user.username
             role_title = form.cleaned_data.get('supervisor_name') or authenticated_user_name
-            audit_actor = f"{authenticated_user_name} ({request.user.groups.first().name if request.user.groups.exists() else 'Supervisor'})"
-            reason_code = form.cleaned_data['reason_code']
-            details = form.cleaned_data['reason_details']
+            audit_actor = f"{role_title} ({request.user.groups.first().name if request.user.groups.exists() else 'Supervisor'})"
+            reason_code = form.cleaned_data.get('reason_code') or lock_obj.reason_code or 'MANUAL_SUPERVISOR'
+            details = form.cleaned_data.get('reason_details') or ('Supervisor quality clearance check.' if lock_obj.is_locked else 'Precautionary lock for calibration inspection.')
 
             if lock_obj.is_locked:
                 lock_obj.release_lock(user_name=audit_actor)
@@ -65,6 +65,8 @@ def toggle_lock(request, machine_id):
                 messages.warning(request, f'Workstation "{machine.machine_code}" LOCKED by {audit_actor}. Job selection is now disabled!')
 
             return redirect('calibration:machine_lock_list')
+        else:
+            messages.error(request, "Unable to update lock status. Please check the entered details.")
     else:
         auth_name = request.user.get_full_name() or request.user.username
         form = WorkstationLockToggleForm(initial={
