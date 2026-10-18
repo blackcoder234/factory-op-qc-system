@@ -138,20 +138,45 @@ LOGIN_REDIRECT_URL = '/dashboard/'
 LOGOUT_REDIRECT_URL = '/'
 
 # Logging configuration
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-            'stream': sys.stdout,
+IS_TESTING = 'test' in sys.argv
+
+if IS_TESTING:
+    LOGGING = {
+        'version': 1,
+        'disable_existing_loggers': False,
+        'handlers': {
+            'null': {
+                'class': 'logging.NullHandler',
+            },
         },
-    },
-    'root': {
-        'handlers': ['console'],
-        'level': 'INFO',
-    },
-}
+        'loggers': {
+            'django.request': {
+                'handlers': ['null'],
+                'level': 'CRITICAL',
+                'propagate': False,
+            },
+            'django.security': {
+                'handlers': ['null'],
+                'level': 'CRITICAL',
+                'propagate': False,
+            },
+        },
+    }
+else:
+    LOGGING = {
+        'version': 1,
+        'disable_existing_loggers': False,
+        'handlers': {
+            'console': {
+                'class': 'logging.StreamHandler',
+                'stream': sys.stdout,
+            },
+        },
+        'root': {
+            'handlers': ['console'],
+            'level': 'INFO',
+        },
+    }
 
 # Security headers & cookie configurations
 X_FRAME_OPTIONS = 'DENY'
