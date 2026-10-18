@@ -13,7 +13,7 @@ Facility: **Apex Precision Dynamics Ltd. — Plant APX-09**
 [![Tests](https://img.shields.io/badge/Tests-49%20Passed%20%E2%9C%93-emerald?style=for-the-badge)](#-automated-testing-suite)
 [![Security](https://img.shields.io/badge/Security-RBAC%20%26%20Zero--Escape-blue?style=for-the-badge)](#-security--production-hardening)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
-[![Video Demo](https://img.shields.io/badge/Video_Demo-Watch_Walkthrough-red?style=for-the-badge&logo=youtube&logoColor=white)](https://youtu.be/REPLACE_WITH_YOUR_VIDEO_ID)
+[![Video Demo](https://img.shields.io/badge/Video_Demo-Watch_Walkthrough-4285F4?style=for-the-badge&logo=googledrive&logoColor=white)](https://drive.google.com/file/d/1gjS2rAMI9YCtLBuhqdNpO-WHZc0bs_dZ/view?usp=sharing)
 
 </div>
 
@@ -27,17 +27,9 @@ In precision mechanical manufacturing facilities, paper logbooks and manual insp
 
 ---
 
-## 🎥 Video Demonstration & Walkthrough
+## 🎥 Video Demonstration & Code Walkthrough
 
-> 📺 **Video Demonstration:**  
-> **[▶ Watch the Project Walkthrough and Code Explanation Here](https://youtu.be/REPLACE_WITH_YOUR_VIDEO_ID)**
->
-> **Direct Video URL:** `https://youtu.be/REPLACE_WITH_YOUR_VIDEO_ID`  
-> _(Note: Replace `https://youtu.be/REPLACE_WITH_YOUR_VIDEO_ID` with your final YouTube / Loom / Google Drive link after recording)._
->
-> _A comprehensive 5-minute technical walkthrough covering: system architecture, role-based access control (RBAC), machine safety interlocks, MTC metallurgical gating with binary file signature verification, live dimensional measurement logging, zero-escape dispatch clearance, and test suite execution._
->
-> _For the complete scene-by-scene script and voiceover guide, see [DEMO_RECORDING_SCRIPT_AND_WALKTHROUGH.md](docs/DEMO_RECORDING_SCRIPT_AND_WALKTHROUGH.md)._
+> 📺 **Video Walkthrough:** **[▶ Watch the FactoryOps QC System Walkthrough & Code Explanation](https://drive.google.com/file/d/1gjS2rAMI9YCtLBuhqdNpO-WHZc0bs_dZ/view?usp=sharing)**
 
 ---
 
@@ -330,7 +322,7 @@ npm run build:css
 - **Email:** [beraamarnath5@gmail.com](mailto:beraamarnath5@gmail.com)
 - **GitHub:** [@blackcoder234](https://github.com/blackcoder234)
 - **Repository:** [https://github.com/blackcoder234/factory-op-qc-system](https://github.com/blackcoder234/factory-op-qc-system)
-- **Demo Video:** [https://youtu.be/REPLACE_WITH_YOUR_VIDEO_ID](https://youtu.be/REPLACE_WITH_YOUR_VIDEO_ID)
+- **Demo Video:** [https://drive.google.com/file/d/1gjS2rAMI9YCtLBuhqdNpO-WHZc0bs_dZ/view?usp=sharing](https://drive.google.com/file/d/1gjS2rAMI9YCtLBuhqdNpO-WHZc0bs_dZ/view?usp=sharing)
 
 ---
 
