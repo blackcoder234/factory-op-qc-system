@@ -181,7 +181,7 @@ factory-op-qc-system/
 | **Backend Framework** | **Python 3.10+ / Django 5.2**          | Battery-packed ORM, secure authentication, CSRF protection, and migration engine |
 | **Styling & Design**  | **Tailwind CSS v4 + Vanilla CSS**      | Custom dark industrial design system with emerald/rose status semantics          |
 | **Typography**        | **Plus Jakarta Sans & JetBrains Mono** | High-contrast monospace fonts for tolerances, heat numbers, and readings         |
-| **Database**          | **SQLite — configured development database** | Multi-table relational integrity with atomic transactions and row-level locking  |
+| **Database**          | **SQLite (Dev) / PostgreSQL Ready**    | Multi-table relational integrity with atomic transactions and row-level locking  |
 | **File Storage**      | **Django FileField**                   | Validated, hashed storage for supplier Mill Test Certificates (PDF/images)       |
 | **Environment**       | **python-dotenv**                      | Explicit environment variable separation for zero credentials in git             |
 
