@@ -110,7 +110,7 @@ The application implements a 5-role operational hierarchy enforced at the server
 - **Dynamic Environment Loading**: `SECRET_KEY`, `DEBUG`, `ALLOWED_HOSTS`, and admin credentials are loaded from environment variables (`.env`) via `python-dotenv`.
 - **Fail-Closed Production Default**: `DEBUG` defaults to `False` if not set; `SECRET_KEY` raises an immediate `ImproperlyConfigured` exception in production if missing.
 - **CSRF-Protected State Changes**: All state mutations (locking workstations, saving readings, approving records, and logging out) use CSRF-protected `POST` requests. `GET /logout/` is rejected with `405 Method Not Allowed`.
-- **Zero Exposed Demo Credentials**: Public login page autofill credentials and displayed passwords have been removed and replaced with a plant security terminal notice.
+- **Demo Account Security**: Demo accounts are provisioned by the `seed_data` command for local evaluation. Configure their passwords through environment variables or the command-line option. Do not reuse demo passwords in production.
 - **Binary Magic-Byte Upload Validation**: Uploaded Mill Test Certificates are validated against a 10MB limit and inspected for magic byte file signatures (`%PDF-`, `\x89PNG\r\n\x1a\n`, `\xff\xd8\xff`, `II*\x00`/`MM\x00*`) and zero-byte rejection, preventing disguised or spoofed binary uploads.
 - **Finiteness & Overflow Protection**: All measurement inputs are validated against non-finite values (`NaN`, `Infinity`) and clamped within physically realistic bounds.
 - **Approval Immutability & Status Integrity**: Approved inspection records are locked against measurement modifications. Any status re-evaluation that results in a failure automatically resets supervisor approval to `PENDING`.
@@ -181,7 +181,7 @@ factory-op-qc-system/
 | **Backend Framework** | **Python 3.10+ / Django 5.2**          | Battery-packed ORM, secure authentication, CSRF protection, and migration engine |
 | **Styling & Design**  | **Tailwind CSS v4 + Vanilla CSS**      | Custom dark industrial design system with emerald/rose status semantics          |
 | **Typography**        | **Plus Jakarta Sans & JetBrains Mono** | High-contrast monospace fonts for tolerances, heat numbers, and readings         |
-| **Database**          | **SQLite (Dev) / PostgreSQL Ready**    | Multi-table relational integrity with atomic transactions and row-level locking  |
+| **Database**          | **SQLite — configured development database** | Multi-table relational integrity with atomic transactions and row-level locking  |
 | **File Storage**      | **Django FileField**                   | Validated, hashed storage for supplier Mill Test Certificates (PDF/images)       |
 | **Environment**       | **python-dotenv**                      | Explicit environment variable separation for zero credentials in git             |
 
